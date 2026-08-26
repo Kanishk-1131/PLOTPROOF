@@ -12,7 +12,9 @@ from app.api.blockchain import router as blockchain_router
 from app.api.public import router as public_router
 from app.api.auth import router as auth_router
 from app.api.documents import router as documents_router
+from app.api.ocr import router as ocr_router
 from app.services.storage_init import ensure_bucket_exists
+
 
 
 app = FastAPI(
@@ -37,7 +39,9 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # Register Routers
 app.include_router(auth_router)
 app.include_router(documents_router)
+app.include_router(ocr_router)
 app.include_router(upload_router)
+
 app.include_router(verification_router)
 app.include_router(gis_router)
 app.include_router(blockchain_router)

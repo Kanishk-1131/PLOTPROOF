@@ -92,6 +92,33 @@ export interface DocumentStatusResponse {
   };
 }
 
+export interface OCRFieldItem {
+  id: number;
+  field_name: string;
+  field_value: string | null;
+  confidence: number;
+  status: string;
+  source_text?: string | null;
+  page_number?: number | null;
+  tier: string;
+}
+
+export interface OCRDocumentResultResponse {
+  document_id: number;
+  engine: string;
+  full_text: string;
+  raw_blocks: Array<{
+    text: string;
+    confidence: number;
+    bbox: number[][];
+    page: number;
+  }>;
+  fields: OCRFieldItem[];
+  overall_confidence: number;
+  review_required: boolean;
+}
+
+
 export interface UploadResponse {
   document_id: number;
   verification_id: string;
@@ -244,6 +271,36 @@ export const apiService = {
     const res = await apiClient.get<Layer3Document[]>('/api/v1/documents');
     return res.data;
   },
+
+  // --- LAYER 4 OCR & DOCUMENT INTELLIGENCE ---
+  async getDocumentOCR(documentId: number): Promise<OCRDocumentResultResponse> {
+    const res = await apiClient.get<OCRDocumentResultResponse>(`/api/v1/documents/${documentId}/ocr`);
+    return res.data;
+  },
+
+  async getDocumentFields(documentId: number): Promise<OCRFieldItem[]> {
+    const res = await apiClient.get<OCRFieldItem[]>(`/api/v1/documents/${documentId}/fields`);
+    return res.data;
+  },
+
+  async updateDocumentField(
+    documentId: number,
+    fieldId: number,
+    fieldValue: string,
+    status: string = 'CORRECTED'
+  ): Promise<OCRFieldItem> {
+    const res = await apiClient.patch<OCRFieldItem>(`/api/v1/documents/${documentId}/fields/${fieldId}`, {
+      field_value: fieldValue,
+      status,
+    });
+    return res.data;
+  },
+
+  async reprocessDocumentOCR(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/ocr/reprocess`);
+    return res.data;
+  },
+
 
   // --- DOCUMENT VERIFICATION PIPELINE ---
   async uploadDocument(file?: File, presetType?: string): Promise<UploadResponse> {

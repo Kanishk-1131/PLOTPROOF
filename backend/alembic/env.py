@@ -28,8 +28,11 @@ import app.models.refresh_token
 import app.models.audit_log
 import app.models.document
 import app.models.processing_job
+import app.models.ocr_result
+import app.models.ocr_field
 import app.models.deed
 from app.core.config import settings
+
 
 
 target_metadata = Base.metadata

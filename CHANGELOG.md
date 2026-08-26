@@ -2,7 +2,35 @@
 
 All notable changes to the PlotProof platform are documented in this file.
 
-## [Cycle 3] - 2026-08-26: Document Ingestion & Secure Storage Pipeline (Layer 3)
+## [Cycle 4] - 2026-08-26: OCR & Document Intelligence Engine (Layer 4)
+
+### Added
+- **OCR Engine Infrastructure**:
+  - `backend/app/ocr/preprocess.py`: Multi-variant image preprocessing pipeline (Original, Grayscale, Denoised with `fastNlMeansDenoising`, Adaptive Gaussian Thresholding, and CLAHE contrast enhancement) + automatic deskew orientation correction.
+  - `backend/app/ocr/engines.py`: Dual-engine architecture with `PyMuPDF` vector/layout text parsing and Tesseract engine fallback.
+  - `backend/app/ocr/normalize.py`: Deterministic normalizers for Survey Numbers (`142 / 3A` -> `142/3A`), area unit standardizer to Square Meters (Acres, Cents, Ground, Gunthas, Sq.ft), boundary trimmer, and coordinate parser with geographic bounding box validation.
+  - `backend/app/ocr/extract.py`: `FieldExtractionEngine` extracting deed registration numbers, deed dates, survey numbers, subdivisions, districts, taluks, villages, areas, 4 boundaries, and GPS coordinates.
+  - `backend/app/ocr/confidence.py`: Field-level confidence tier classifier (`HIGH` >= 0.90, `MEDIUM` 0.70-0.89, `LOW` < 0.70) and automatic `Human Review` trigger flag.
+- **Relational Models & Database Migrations**:
+  - `backend/app/models/ocr_result.py`: SQLAlchemy `OCRResult` storing full document text, word-level bounding boxes (`bbox`), engine name, and timestamp.
+  - `backend/app/models/ocr_field.py`: SQLAlchemy `OCRField` storing extracted key-value pairs, field-level confidence, status (`EXTRACTED`, `CONFIRMED`, `CORRECTED`, `REJECTED`), and source text.
+  - Generated and applied Alembic migration `13745b9b6e54_add_ocr_extraction_tables.py`.
+- **API Endpoints (`/api/v1/documents`)**:
+  - `GET /api/v1/documents/{id}/ocr`: Full raw OCR text and bounding boxes for spatial inspection.
+  - `GET /api/v1/documents/{id}/fields`: Structured land title fields with confidence scoring.
+  - `PATCH /api/v1/documents/{id}/fields/{field_id}`: Statutory human correction workflow (restricted to Sub-Registrars/Admins with audit logging).
+  - `POST /api/v1/documents/{id}/ocr/reprocess`: On-demand re-extraction endpoint returning Layer 5 Handshake Contract Payload.
+- **Automated Testing Suite**:
+  - Created `backend/tests/test_ocr.py` covering 12 comprehensive test scenarios (Clean deed, preprocessing variants, deskew orientation, Tamil regional normalizers, multi-unit conversions, coordinate bounds, missing survey review trigger, REST endpoints, Sub-Registrar corrections, Citizen 403 authorization, Layer 5 contract schema, and reprocessing).
+
+### Verified
+- 12/12 tests in `backend/tests/test_ocr.py` passing with 100% success.
+- Total 39/39 tests passing across all layers (`test_auth.py`, `test_pipeline.py`, `test_documents.py`, `test_ocr.py`).
+- Next.js production build (`npm run build`) compiles cleanly with 0 type errors across all 7 routes.
+
+---
+
+
 
 ### Added
 - **Multi-Vector Validation Engine**:
