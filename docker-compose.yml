@@ -1,0 +1,112 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: plotproof-backend
+
+    env_file:
+      - .env
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    volumes:
+      - ./backend:/app
+
+    networks:
+      - plotproof-network
+
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: plotproof-frontend
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+    networks:
+      - plotproof-network
+
+
+  postgres:
+    image: postgis/postgis:16-3.4
+
+    container_name: plotproof-postgres
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - plotproof-network
+
+
+  redis:
+    image: redis:7-alpine
+
+    container_name: plotproof-redis
+
+    ports:
+      - "6379:6379"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - plotproof-network
+
+
+networks:
+  plotproof-network:
+    driver: bridge
+
+
+volumes:
+  postgres_data:
+  redis_data:
