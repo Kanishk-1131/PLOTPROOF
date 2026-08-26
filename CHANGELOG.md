@@ -2,7 +2,60 @@
 
 All notable changes to the PlotProof platform are documented in this file.
 
+## [Cycle 8] - 2026-08-26: Blockchain & Smart Contract Anchoring (Layer 8)
+
+### Added
+- **Smart Contract Architecture (`blockchain/contracts/PlotProofRegistry.sol`)**:
+  - OpenZeppelin `Ownable` contract storing compact, fixed-size `bytes32` cryptographic digests (`verificationId`, `verificationHash`, `commitment`, `timestamp`).
+  - Emits `VerificationAnchored(bytes32 indexed verificationId, bytes32 indexed verificationHash, bytes32 indexed commitment, uint64 timestamp)`.
+  - Zero citizen PII, zero raw deeds, and zero ZK witnesses on-chain.
+  - Multi-tier duplicate protection at smart contract, database, and backend service levels.
+- **Hardhat Infrastructure & Smart Contract Tests**:
+  - `blockchain/hardhat.config.js`: Supports Hardhat local network (Chain ID 31337) and Polygon Amoy testnet.
+  - `blockchain/scripts/deploy.js`: Deterministic deployment script.
+  - `blockchain/test/PlotProofRegistry.test.js`: 6 unit tests verifying successful anchor, duplicate rejection, owner access control, bytes32 retrieval, and input validation.
+- **Backend Blockchain Engine (`app/blockchain/`)**:
+  - `backend/app/blockchain/service.py`: `BlockchainService` orchestrating prerequisite validation (Integrity PASS, GIS PASS, ZK proof VALID), transaction generation, mining confirmation, and tamper cross-checking.
+  - Cross-checks database records against on-chain anchor: intercepts database tampering (`BLOCKCHAIN_ANCHOR_MISMATCH`) if database hash is compromised.
+- **Relational Models & Database Migrations**:
+  - `backend/app/models/blockchain_anchor.py`: `BlockchainAnchor` storing `verification_id`, `transaction_hash`, `block_number`, `contract_address`, `network`, and `status`.
+  - Applied Alembic migration `48f0283dcbbc_add_zk_proof_and_blockchain_anchor_.py`.
+- **REST Endpoints (`/api/v1`)**:
+  - `POST /api/v1/documents/{id}/blockchain/anchor`: Anchors verified document on Polygon.
+  - `GET /api/v1/documents/{id}/blockchain`: Retrieves blockchain transaction receipt.
+  - `GET /api/v1/verification/{verification_id}`: Public verification endpoint cross-checking database against on-chain state.
+- **Automated Testing Suite**:
+  - Created `backend/tests/test_blockchain.py` (12 tests) passing with 100% success.
+
+---
+
+## [Cycle 7] - 2026-08-26: Privacy & Zero-Knowledge Proof System (Layer 7)
+
+### Added
+- **Circom Circuit & Groth16 Infrastructure (`blockchain/zk/`)**:
+  - `blockchain/zk/circuits/land_verification.circom`: Non-linear algebraic binding proving `Poseidon(privateRecord, secret) == publicCommitment` and `validationStatus == 1` without revealing private identity or deed data.
+  - `blockchain/zk/build/verification_key.json`: BN254 Groth16 verification key parameters (`land-verification-v1`, `vk-v1`).
+  - `blockchain/zk/scripts/generate-proof.js` & `verify-proof.js`: Standalone Node.js CLI proof generator and verifier.
+- **Backend Privacy & Commitment Engine (`app/privacy/`)**:
+  - `backend/app/privacy/commitments.py`: Deterministic algebraic Poseidon commitment calculator bounded in BN254 scalar field order.
+  - `backend/app/privacy/privacy_policy.py`: Strict PII minimization scrubbing Aadhaar, PAN, phone, owner names, addresses, and secrets from all public signals and responses.
+  - `backend/app/privacy/zk_service.py`: `ZKService` enforcing prerequisite checks (Integrity PASS, GIS PASS, Status APPROVED), witness isolation (never persisted or returned to API), Groth16 proof generation, and local verification before declaring valid.
+- **Relational Models & Database Migrations**:
+  - `backend/app/models/zk_proof.py`: `ZKProofRecord` storing `proof_id`, `commitment`, `public_signals`, `proof_json`, `circuit_version`, and `verification_key_version`.
+- **REST Endpoints (`/api/v1`)**:
+  - `POST /api/v1/documents/{id}/privacy/commit`: Generates Poseidon commitment with cryptographic salt.
+  - `POST /api/v1/documents/{id}/privacy/prove`: Generates and locally verifies Groth16 ZK proof.
+  - `POST /api/v1/documents/{id}/privacy/verify`: Locally verifies proof against verification key and public signals.
+  - `GET /api/v1/documents/{id}/privacy/status`: Privacy dashboard status (`private_identity: PROTECTED`, `sensitive_data_exposed: NO`).
+- **Standardized Handshake for Layer 8**:
+  - Produces `ZKBlockchainHandshakePayload` linking verification hash, commitment, proof, and signals.
+- **Automated Testing Suite**:
+  - Created `backend/tests/test_privacy.py` (12 tests) passing with 100% success.
+
+---
+
 ## [Cycle 6] - 2026-08-26: Integrity, Fraud Detection & Cryptographic Verification (Layer 6)
+
 
 ### Added
 - **Cryptographic Hash Chain & Canonical Serialization (`app/integrity/`)**:

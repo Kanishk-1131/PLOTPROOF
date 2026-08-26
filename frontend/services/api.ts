@@ -347,7 +347,45 @@ export const apiService = {
     return res.data;
   },
 
+  // --- LAYER 7 PRIVACY & ZERO-KNOWLEDGE PROOFS ---
+  async createDocumentPrivacyCommitment(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/privacy/commit`);
+    return res.data;
+  },
+
+  async generateDocumentPrivacyProof(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/privacy/prove`);
+    return res.data;
+  },
+
+  async verifyDocumentPrivacyProof(documentId: number, proofId: string) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/privacy/verify?proof_id=${proofId}`);
+    return res.data;
+  },
+
+  async getDocumentPrivacyStatus(documentId: number) {
+    const res = await apiClient.get(`/api/v1/documents/${documentId}/privacy/status`);
+    return res.data;
+  },
+
+  // --- LAYER 8 BLOCKCHAIN & SMART CONTRACT ---
+  async anchorDocumentOnBlockchain(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/blockchain/anchor`);
+    return res.data;
+  },
+
+  async getDocumentBlockchainAnchor(documentId: number) {
+    const res = await apiClient.get(`/api/v1/documents/${documentId}/blockchain`);
+    return res.data;
+  },
+
+  async verifyAgainstBlockchain(verificationId: string) {
+    const res = await apiClient.get(`/api/v1/verification/${verificationId}`);
+    return res.data;
+  },
+
   // --- DOCUMENT VERIFICATION PIPELINE ---
+
 
   async uploadDocument(file?: File, presetType?: string): Promise<UploadResponse> {
     const formData = new FormData();

@@ -1,18 +1,28 @@
 const hre = require("hardhat");
 
 async function main() {
-  const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying PlotProofRegistry with account:", deployer ? deployer.address : "local");
+    console.log("Deploying PlotProofRegistry smart contract to network:", hre.network.name);
 
-  const PlotProof = await hre.ethers.getContractFactory("PlotProofRegistry");
-  const registry = await PlotProof.deploy();
-  await registry.waitForDeployment();
+    const [deployer] = await hre.ethers.getSigners();
+    console.log("Deploying with account:", deployer.address);
 
-  const address = await registry.getAddress();
-  console.log("PlotProofRegistry successfully deployed to:", address);
+    const PlotProofRegistry = await hre.ethers.getContractFactory("PlotProofRegistry");
+    const registry = await PlotProofRegistry.deploy(deployer.address);
+
+    await registry.waitForDeployment();
+    const address = await registry.getAddress();
+
+    console.log("PlotProofRegistry successfully deployed to:", address);
+    return address;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+    main()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error(error);
+            process.exit(1);
+        });
+}
+
+module.exports = main;

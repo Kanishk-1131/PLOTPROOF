@@ -1,0 +1,20 @@
+{
+  "name": "plotproof-blockchain",
+  "version": "1.0.0",
+  "description": "PlotProof Zero-Knowledge Circuits and Polygon Smart Contracts",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network hardhat",
+    "deploy:amoy": "hardhat run scripts/deploy.js --network polygonAmoy"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "circomlibjs": "^0.1.7",
+    "snarkjs": "^0.7.6"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.2"
+  }
+}
