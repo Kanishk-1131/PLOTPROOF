@@ -217,6 +217,72 @@ class TestLayer2Auth(unittest.TestCase):
         self.assertTrue(any("LOGIN" in act or "REGISTER" in act for act in actions))
         print("[PASS] Test 10: Security Audit Log Ingestion & Role-Restricted Inspection Verified")
 
+    def test_11_inactive_account_rejection(self):
+        db = SessionLocal()
+        try:
+            # Temporarily deactivate test user
+            user = db.query(User).filter(User.email == "newcitizen@example.com").first()
+            self.assertIsNotNone(user)
+            user.is_active = False
+            db.commit()
+
+            # Attempt login on inactive account
+            login_res = client.post("/api/v1/auth/login", json={
+                "email": "newcitizen@example.com",
+                "password": "StrongPassword123!"
+            })
+            self.assertEqual(login_res.status_code, 401)
+
+            # Reactivate
+            user.is_active = True
+            db.commit()
+            print("[PASS] Test 11: Inactive Account Login Rejection (401) Verified")
+        finally:
+            db.close()
+
+    def test_12_permission_model_matrix(self):
+        from app.core.permissions import Permission, has_permission, require_permissions
+
+        db = SessionLocal()
+        try:
+            citizen = db.query(User).filter(User.role == UserRole.CITIZEN).first()
+            registrar = db.query(User).filter(User.role == UserRole.REGISTRAR).first()
+            bank_officer = db.query(User).filter(User.role == UserRole.BANK_OFFICER).first()
+            admin = db.query(User).filter(User.role == UserRole.ADMIN).first()
+
+            # 1. Citizen: Can upload/view deed, CANNOT approve verification or manage users
+            self.assertTrue(has_permission(citizen, Permission.DOCUMENT_UPLOAD))
+            self.assertTrue(has_permission(citizen, Permission.DOCUMENT_VIEW))
+            self.assertFalse(has_permission(citizen, Permission.VERIFICATION_APPROVE))
+            self.assertFalse(has_permission(citizen, Permission.USER_MANAGE))
+
+            # 2. Registrar: Can approve/reject verification & anchor blockchain, CANNOT manage users
+            self.assertTrue(has_permission(registrar, Permission.VERIFICATION_APPROVE))
+            self.assertTrue(has_permission(registrar, Permission.VERIFICATION_REJECT))
+            self.assertTrue(has_permission(registrar, Permission.BLOCKCHAIN_ANCHOR))
+            self.assertFalse(has_permission(registrar, Permission.USER_MANAGE))
+
+            # 3. Bank Officer: Can view verification and documents, CANNOT approve or modify
+            self.assertTrue(has_permission(bank_officer, Permission.VERIFICATION_VIEW))
+            self.assertFalse(has_permission(bank_officer, Permission.VERIFICATION_APPROVE))
+            self.assertFalse(has_permission(bank_officer, Permission.BLOCKCHAIN_ANCHOR))
+
+            # 4. Admin: Has all administrative capabilities
+            self.assertTrue(has_permission(admin, Permission.USER_MANAGE))
+            self.assertTrue(has_permission(admin, Permission.AUDIT_VIEW))
+            self.assertTrue(has_permission(admin, Permission.DOCUMENT_DELETE))
+
+            # 5. Dependency checker enforces granular permission
+            approve_checker = require_permissions(Permission.VERIFICATION_APPROVE)
+            self.assertEqual(approve_checker(registrar), registrar)
+            with self.assertRaises(Exception):
+                approve_checker(citizen)
+
+            print("[PASS] Test 12: Granular Role-to-Permission Matrix & Access Enforcement Verified")
+        finally:
+            db.close()
+
 if __name__ == "__main__":
     unittest.main()
+
 
