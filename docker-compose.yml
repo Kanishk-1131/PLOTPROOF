@@ -1,103 +1,95 @@
 services:
 
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: plotproof-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-plotproof}
+      POSTGRES_USER: ${POSTGRES_USER:-plotproof}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-plotproof} -d ${POSTGRES_DB:-plotproof}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - plotproof-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: plotproof-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis_data:/data
+    networks:
+      - plotproof-network
+
   backend:
     build:
       context: ./backend
-
+      dockerfile: ../infrastructure/docker/Dockerfile.backend
     container_name: plotproof-backend
-
     env_file:
       - .env
-
     ports:
       - "8000:8000"
-
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-
     volumes:
       - ./backend:/app
-
+      - backend_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - plotproof-network
 
+  worker:
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/Dockerfile.worker
+    container_name: plotproof-worker
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+      - backend_storage:/app/storage
+    networks:
+      - plotproof-network
 
   frontend:
     build:
       context: ./frontend
-
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
     container_name: plotproof-frontend
-
     ports:
       - "3000:3000"
-
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-
-    networks:
-      - plotproof-network
-
-
-  postgres:
-    image: postgis/postgis:16-3.4
-
-    container_name: plotproof-postgres
-
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
-    ports:
-      - "5432:5432"
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-    networks:
-      - plotproof-network
-
-
-  redis:
-    image: redis:7-alpine
-
-    container_name: plotproof-redis
-
-    ports:
-      - "6379:6379"
-
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "redis-cli",
-          "ping"
-        ]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-    volumes:
-      - redis_data:/data
-
+    depends_on:
+      - backend
     networks:
       - plotproof-network
 
@@ -106,8 +98,8 @@ services:
     container_name: plotproof-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -138,7 +130,6 @@ services:
       - plotproof-network
 
 networks:
-
   plotproof-network:
     driver: bridge
 
@@ -146,4 +137,4 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-
+  backend_storage:

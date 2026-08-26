@@ -46,33 +46,8 @@ class Plot(Base):
     status = Column(String(50), default="REGISTERED")  # REGISTERED, DISPUTED, ENCROACHED
     created_at = Column(DateTime, default=datetime.utcnow)
 
-class VerificationRecord(Base):
-    __tablename__ = "verifications"
+from app.models.verification import Verification, VerificationRecord
 
-    id = Column(Integer, primary_key=True, index=True)
-    verification_id = Column(String(100), unique=True, index=True, nullable=False)
-    document_id = Column(Integer, ForeignKey("documents.id"), nullable=False)
-    
-    ocr_score = Column(Float, default=0.0)
-    spatial_score = Column(Float, default=0.0)
-    authenticity_score = Column(Float, default=0.0)
-    privacy_score = Column(Float, default=0.0)
-    overall_score = Column(Float, default=0.0)
-    
-    status = Column(String(50), default="PENDING")  # VERIFIED, SPATIAL_COLLISION, TAMPER_ALERT, MANUAL_REVIEW
-    collision_detected = Column(Boolean, default=False)
-    tamper_detected = Column(Boolean, default=False)
-    
-    collision_details_json = Column(Text, nullable=True)
-    tamper_details_json = Column(Text, nullable=True)
-    privacy_details_json = Column(Text, nullable=True)
-    
-    certificate_url = Column(String(500), nullable=True)
-    qr_code_url = Column(String(500), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    document = relationship("Document", back_populates="verification")
-    blockchain_record = relationship("BlockchainRecord", back_populates="verification", uselist=False)
 
 class BlockchainRecord(Base):
     __tablename__ = "blockchain_records"
@@ -88,4 +63,4 @@ class BlockchainRecord(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     status = Column(String(50), default="CONFIRMED")
 
-    verification = relationship("VerificationRecord", back_populates="blockchain_record")
+    verification = relationship("Verification", back_populates="blockchain_record")

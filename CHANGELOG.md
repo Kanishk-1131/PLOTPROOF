@@ -2,7 +2,79 @@
 
 All notable changes to the PlotProof platform are documented in this file.
 
+## [Cycle 14] - 2026-08-26: Documentation, Operations & Handover (Layer 14)
+
+### Added
+- **Complete Architecture & System Documentation (`docs/`)**:
+  - `docs/architecture.md`: Complete end-to-end system architecture, data flow, state machine, and subsystem breakdown.
+  - `docs/setup.md`: Quickstart guide for Docker Compose and local development, environment configurations, and seeded accounts.
+  - `docs/database.md`: Complete data dictionary covering all 10 core tables, column types, foreign keys, indexes, and retention policies.
+  - `docs/api.md`: Comprehensive REST API reference across all business endpoints.
+  - `docs/authentication.md`: Argon2id password hashing, minimal JWT token claims hygiene, and RBAC matrix.
+  - `docs/ocr.md`: Dual engine OCR (EasyOCR + Tesseract), OpenCV deskewing, and multi-unit area conversions.
+  - `docs/gis.md`: Spatial topological relationships, coordinate reprojection (EPSG:32644), and multi-factor spatial risk engine.
+  - `docs/integrity.md`: SHA-256 fingerprinting, RFC 8785 canonical JSON, and stage-linked cryptographic hash chain.
+  - `docs/zk.md`: Zero-knowledge privacy architecture, BN254 scalar field, Poseidon commitments, and zero-PII guarantees.
+  - `docs/blockchain.md`: Solidity smart contract (`LandVerificationRegistry.sol`), Polygon L2 anchoring, and confirmation tracking.
+  - `docs/certificate.md`: ReportLab PDF certificate generation, pure URL QR code encoding, and public portal workflow.
+  - `docs/deployment.md`: Production deployment runbook, Gunicorn ASGI worker tuning, zero-downtime migrations, and RTO/RPO disaster recovery.
+  - `docs/security.md`: STRIDE threat modeling, defensive mitigations, IDOR cross-tenant isolation, and secret management.
+  - `docs/troubleshooting.md`: Operational runbook and standard error codes dictionary (`DOCUMENT_NOT_FOUND`, `SPATIAL_COLLISION_DETECTED`, `INTEGRITY_MISMATCH`, etc.).
+  - `docs/demo.md`: Deterministic 10-step judge presentation script, 3 controlled demo scenarios (`DEMO-001`, `DEMO-002`, `DEMO-003`), and scientifically accurate claims guide.
+- **Master README (`README.md`)**:
+  - Complete executive summary, problem statement, technical solution, quickstart instructions, test status badges, and documentation directory index.
+
+---
+
+## [Cycle 13] - 2026-08-26: Final Build, Integration & Release (Layer 13)
+
+### Added
+- **Containerization & Orchestration Assets**:
+  - `docker-compose.yml`: Multi-service production stack with PostgreSQL + PostGIS, Redis, FastAPI Backend, Celery Worker, Next.js Frontend, MinIO, ClamAV, and Nginx.
+  - `infrastructure/docker/Dockerfile.backend`: Production Python 3.11 image with Tesseract, Poppler, OpenCV, and GDAL/GEOS.
+  - `infrastructure/docker/Dockerfile.frontend`: Multi-stage Node.js 20 Alpine builder and runner.
+  - `infrastructure/docker/Dockerfile.worker`: Dedicated background processing worker for OCR, GIS, ZK, and Blockchain tasks.
+  - `infrastructure/monitoring/prometheus.yml`: Metrics scrape configurations for backend, postgres, and redis.
+- **Automation & CLI (`Makefile`)**:
+  - `make build`, `make up`, `make down`, `make test`, `make test-unit`, `make test-integration`, `make test-security`, `make test-e2e`, `make lint`, `make migrate`, `make seed`, `make demo`.
+- **Environment & Git Hygiene**:
+  - `.env.example`: Secure environment configuration template with zero committed secrets.
+  - `.gitignore`: Comprehensive ignore patterns for build artifacts, virtual environments, database dumps, and certificates.
+
+---
+
+## [Cycle 12] - 2026-08-26: Testing, Validation & Production Acceptance (Layer 12)
+
+### Added
+- **Complete Multi-Category Test Hierarchy (`tests/`)**:
+  - `tests/unit/`: 7 test suites (22 tests) covering Auth, OCR normalizers, Integrity hash chains, GIS polygon geometry, ZK Poseidon commitments, Blockchain hex encodings, and Certificate PDF generation.
+  - `tests/integration/`: 5 test suites (9 tests) covering Document Ingestion pipeline, Database constraint cascades, Cadastral PostGIS queries, ZK-to-Blockchain pipelines, and Certificate issuance/revocation lifecycles.
+  - `tests/security/`: 5 test suites (13 tests) covering Authentication lockout, RBAC 403 Forbidden enforcement, Magic bytes upload filtering, IDOR cross-tenant isolation, and Security headers.
+  - `tests/e2e/`: End-to-end master suite (6 tests) covering `DEMO-001` (Clean deed), `DEMO-002` (Spatial collision hold), Sub-Registrar approval overrides, `DEMO-003` (Single-bit tamper interception), Performance SLA benchmarks, and the 16-point Production Acceptance Checklist.
+- **Production Acceptance Standard**:
+  - 173 / 173 total tests passing across all 14 layers with 100% success rate.
+
+---
+
+## [Cycle 11] - 2026-08-26: End-to-End Integration & System Orchestration (Layer 11)
+
+### Added
+- **Central Verification Entity (`backend/app/models/verification.py`)**:
+  - Implemented single unified `Verification` model with state machine columns (`status`, `current_stage`, `stages_json`, `review_required`, `review_reason`, `reviewed_by`, `reviewed_at`, `review_decision`).
+  - Applied Alembic database migration `49e4b1967d18_add_verification_orchestration_fields.py`.
+- **Orchestrator Service (`backend/app/services/orchestrator.py`)**:
+  - Centralized stage progression engine: `UPLOADED` &rarr; `PROCESSING` &rarr; `OCR_COMPLETED` &rarr; `GIS_COMPLETED` &rarr; `INTEGRITY_COMPLETED` &rarr; `READY_FOR_PROOF` &rarr; `ZK_VERIFIED` &rarr; `BLOCKCHAIN_CONFIRMED` &rarr; `CERTIFICATE_GENERATED` &rarr; `VERIFIED`.
+  - Stage idempotency and failure recovery / resumption from failed stage checkpoints.
+  - Statutory manual review gate halting pipeline on boundary overlap.
+- **Orchestration REST API (`backend/app/api/orchestration.py`)**:
+  - `POST /api/v1/verifications`, `GET /api/v1/verifications/{id}`, `POST /api/v1/verifications/{id}/retry`, `POST /api/v1/verifications/{id}/review`.
+- **Automated Orchestration Test Suite (`backend/tests/test_orchestration.py`)**:
+  - 12 comprehensive unit and integration tests covering end-to-end execution, stage tracking, collision halting, Sub-Registrar approval/rejection, citizen 403 authorization, idempotency, failure recovery, and audit logging.
+
+---
+
 ## [Cycle 10] - 2026-08-26: Production Security, Authentication & Deployment (Layer 10)
+
 
 ### Added
 - **Production Security Middleware (`backend/app/middleware/security.py`)**:

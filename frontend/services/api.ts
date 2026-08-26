@@ -465,11 +465,33 @@ export const apiService = {
   },
 
 
+  // --- LAYER 11 END-TO-END INTEGRATION & ORCHESTRATION ---
+  async startOrchestration(documentId: number) {
+    const res = await apiClient.post('/api/v1/verifications', { document_id: documentId });
+    return res.data;
+  },
+
+  async getOrchestrationStatus(verificationId: string) {
+    const res = await apiClient.get(`/api/v1/verifications/${verificationId}`);
+    return res.data;
+  },
+
+  async retryOrchestration(verificationId: string) {
+    const res = await apiClient.post(`/api/v1/verifications/${verificationId}/retry`);
+    return res.data;
+  },
+
+  async submitOrchestrationReview(verificationId: string, decision: string, notes?: string) {
+    const res = await apiClient.post(`/api/v1/verifications/${verificationId}/review`, { decision, notes });
+    return res.data;
+  },
+
   // --- LAYER 10 HEALTH & READINESS ---
   async getReadiness() {
     const res = await apiClient.get('/ready');
     return res.data;
   }
 };
+
 
 

@@ -76,13 +76,14 @@ class IntegrityService:
 
         # 2. OCR Hash (from OCRResult or raw OCR text)
         ocr_result = db.scalar(select(OCRResult).where(OCRResult.document_id == doc.id))
-        ocr_raw_text = ocr_result.raw_text if ocr_result else (doc.ocr_raw_text or "")
-        ocr_blocks = None
-        if ocr_result and ocr_result.raw_blocks_json:
+        ocr_raw_text = (getattr(ocr_result, "full_text", None) or getattr(ocr_result, "raw_text", None)) if ocr_result else (doc.ocr_raw_text or "")
+        ocr_blocks = getattr(ocr_result, "raw_blocks", None)
+        if not ocr_blocks and ocr_result and getattr(ocr_result, "raw_blocks_json", None):
             try:
                 ocr_blocks = json.loads(ocr_result.raw_blocks_json)
             except Exception:
                 pass
+
         ocr_hash = compute_ocr_hash(ocr_raw_text, ocr_blocks)
 
         # 3. Metadata Hash (from structured OCRFields)

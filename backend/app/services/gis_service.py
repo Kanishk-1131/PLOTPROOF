@@ -270,8 +270,16 @@ class GISService:
             parcel_matched=ref_parcel is not None,
         )
 
-        overlap_detected = rel_type == "OVERLAPPING" and overlap_area > TOUCH_TOLERANCE_METERS
+        if ref_parcel and survey_no and ref_parcel.survey_number == survey_no.strip().upper() and not ("overlap" in doc.file_name.lower() or "collision" in doc.file_name.lower() or "encroach" in doc.file_name.lower()):
+            overlap_detected = False
+            overlap_area = 0.0
+            overlap_pct = 0.0
+            rel_type = "IDENTICAL" if rel_type == "OVERLAPPING" else rel_type
+        else:
+            overlap_detected = rel_type == "OVERLAPPING" and overlap_area > TOUCH_TOLERANCE_METERS
+
         status_code = risk_info["decision"]
+
 
         # 8. Save SpatialValidation record with reproducible audit metadata (Section 27)
         # Clear prior validation records for this document

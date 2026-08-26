@@ -27,19 +27,25 @@ SQM_CONVERSIONS = {
 
 def normalize_survey_number(value: str) -> str:
     """
-    Normalizes survey number strings like 'Survey No 125 / 3A' -> '125/3A' (Section 16).
+    Normalizes survey number strings like 'Survey No 125 / 3A' or 'புல எண்: 142/3A' -> '142/3A' (Section 16).
     """
     if not value:
         return ""
 
     cleaned = value.strip()
-    # Remove prefix labels
-    cleaned = re.sub(r"^(?:survey\s*(?:no|number)?\.?|s\.?\s*no\.?|r\.?s\.?\s*no\.?)\s*[:\-]?\s*", "", cleaned, flags=re.IGNORECASE)
+    # Remove prefix labels in English and Tamil
+    cleaned = re.sub(
+        r"^(?:survey\s*(?:no|number)?\.?|s\.?\s*no\.?|r\.?s\.?\s*no\.?|s\.?f\.?|புல\s*எண்)\s*[:\-]?\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE | re.UNICODE,
+    )
     # Remove internal spaces around slashes and dashes
     cleaned = re.sub(r"\s*[\/\-]\s*", "/", cleaned)
     # Remove remaining spaces
     cleaned = re.sub(r"\s+", "", cleaned)
     return cleaned.upper()
+
 
 
 def split_survey_and_subdivision(normalized_survey: str) -> Tuple[str, Optional[str]]:

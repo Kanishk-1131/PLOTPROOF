@@ -67,6 +67,10 @@ class CertificateService:
         zk_rec = db.scalar(select(ZKProofRecord).where(ZKProofRecord.document_id == doc.id))
         anchor_rec = db.scalar(select(BlockchainAnchor).where(BlockchainAnchor.document_id == doc.id))
 
+        from app.models.verification import Verification
+        verif = db.scalar(select(Verification).where(Verification.document_id == doc.id))
+        is_approved = bool(verif and verif.review_decision == "APPROVED")
+
         is_integrity_valid = bool(integrity_rec and integrity_rec.file_hash)
         is_gis_valid = bool(spatial_rec and spatial_rec.geometry_valid and not spatial_rec.overlap_detected)
         is_zk_valid = bool(zk_rec and zk_rec.status == "VERIFIED")
@@ -74,6 +78,10 @@ class CertificateService:
 
         if "overlap" in doc.file_name.lower() or "collision" in doc.file_name.lower() or "tamper" in doc.file_name.lower():
             is_gis_valid = False
+
+        if is_approved:
+            is_gis_valid = True
+
 
         if not (is_integrity_valid and is_gis_valid and is_zk_valid and is_blockchain_confirmed):
             raise HTTPException(

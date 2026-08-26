@@ -37,8 +37,14 @@ build/
 
 # Database & Storage
 postgres_data/
+redis_data/
 minio_data/
 plotproof.db
 backend/plotproof.db
 backend/static/storage/
+backend/storage/
+storage/
+.coverage
+htmlcov/
+
 

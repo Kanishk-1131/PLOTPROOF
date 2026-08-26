@@ -23,6 +23,17 @@ from app.certificate.qr import generate_qr_image_bytes
 
 CERTIFICATES_DIR = Path(__file__).resolve().parent.parent.parent / "storage" / "certificates"
 
+STATUTORY_LEGAL_DISCLAIMER = (
+    "PlotProof System Verification Certificate. "
+    "This certificate confirms the verification results produced by the PlotProof system. "
+    "It does not independently constitute a government-issued title document or legal title guarantee."
+)
+
+
+def compute_certificate_hash(pdf_bytes: bytes) -> str:
+    return hashlib.sha256(pdf_bytes).hexdigest()
+
+
 
 def generate_certificate_pdf(
     verification_id: str,

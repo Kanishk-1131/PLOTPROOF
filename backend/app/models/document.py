@@ -125,7 +125,11 @@ class Document(Base):
     )
 
     # Relationships
-    land_record = relationship("LandRecord", back_populates="document", uselist=False)
-    verification = relationship("VerificationRecord", back_populates="document", uselist=False)
+    land_record = relationship("LandRecord", back_populates="document", uselist=False, cascade="all, delete-orphan")
+    verification = relationship("Verification", back_populates="document", uselist=False, cascade="all, delete-orphan")
     processing_jobs = relationship("ProcessingJob", back_populates="document", cascade="all, delete-orphan")
+
+
+
+
 

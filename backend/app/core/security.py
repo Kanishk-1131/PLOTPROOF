@@ -33,10 +33,14 @@ def hash_token(raw_token: str) -> str:
 def create_access_token(
     user_id: int,
     role: str,
+    expires_delta: Optional[timedelta] = None,
 ) -> str:
-    expires = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+    if expires_delta:
+        expires = datetime.now(timezone.utc) + expires_delta
+    else:
+        expires = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.access_token_expire_minutes
+        )
 
     payload = {
         "sub": str(user_id),
@@ -63,14 +67,18 @@ def create_refresh_token(
     return raw_token, token_hash, expires
 
 
-def decode_token(token: str) -> dict[str, Any]:
-    return jwt.decode(
-        token,
-        settings.jwt_secret,
-        algorithms=["HS256"],
-    )
+def decode_token(token: str) -> Optional[dict[str, Any]]:
+    try:
+        return jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+        )
+    except jwt.PyJWTError:
+        return None
 
 
 decode_access_token = decode_token
+
 
 

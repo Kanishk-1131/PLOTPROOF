@@ -16,6 +16,7 @@ from app.api.ocr import router as ocr_router
 from app.api.integrity import router as integrity_router
 from app.api.privacy import router as privacy_router
 from app.api.certificate import router as certificate_router
+from app.api.orchestration import router as orchestration_router
 from app.services.storage_init import ensure_bucket_exists
 from app.middleware.security import SecurityHeadersMiddleware, RequestIDMiddleware
 
@@ -49,11 +50,13 @@ app.include_router(ocr_router)
 app.include_router(integrity_router)
 app.include_router(privacy_router)
 app.include_router(certificate_router)
+app.include_router(orchestration_router)
 app.include_router(upload_router)
 app.include_router(verification_router)
 app.include_router(gis_router)
 app.include_router(blockchain_router)
 app.include_router(public_router)
+
 
 
 @app.on_event("startup")
