@@ -11,6 +11,9 @@ from app.api.gis import router as gis_router
 from app.api.blockchain import router as blockchain_router
 from app.api.public import router as public_router
 from app.api.auth import router as auth_router
+from app.api.documents import router as documents_router
+from app.services.storage_init import ensure_bucket_exists
+
 
 app = FastAPI(
     title="PlotProof API",
@@ -33,6 +36,7 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Register Routers
 app.include_router(auth_router)
+app.include_router(documents_router)
 app.include_router(upload_router)
 app.include_router(verification_router)
 app.include_router(gis_router)
@@ -46,6 +50,8 @@ async def startup_event():
     """
     init_db()
     seed_database()
+    ensure_bucket_exists()
+
 
 @app.get("/")
 def read_root():

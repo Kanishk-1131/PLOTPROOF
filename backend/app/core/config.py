@@ -13,10 +13,20 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
 
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = "plotproofadmin"
+    minio_secret_key: str = "change_this_to_a_strong_password"
+    minio_bucket: str = "plotproof-documents"
+    max_upload_size_mb: int = 50
+
+    clamav_host: str = "localhost"
+    clamav_port: int = 3310
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",
     )
+
 
 
 settings = Settings()

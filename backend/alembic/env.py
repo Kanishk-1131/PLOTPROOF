@@ -26,8 +26,11 @@ from app.database.base import Base
 import app.models.user
 import app.models.refresh_token
 import app.models.audit_log
+import app.models.document
+import app.models.processing_job
 import app.models.deed
 from app.core.config import settings
+
 
 target_metadata = Base.metadata
 

@@ -264,11 +264,15 @@ Aadhaar UID: 8721-3312-9014
             with open(doc_file, "w", encoding="utf-8") as f:
                 f.write(sample_content)
 
+            d_sha = hashlib.sha256(v_id.encode()).hexdigest()
             doc = Document(
+                owner_user_id=1,
                 verification_id=v_id,
                 file_path=doc_file,
                 file_name=f"Deed_{s_no.replace('/', '_')}.pdf",
-                file_hash=hashlib.sha256(v_id.encode()).hexdigest(),
+                storage_key=f"seed/{v_id}.pdf",
+                sha256=d_sha,
+                file_hash=d_sha,
                 file_size=245890,
                 mime_type="application/pdf",
                 ocr_raw_text=f"Sample Deed for {s_no}",
@@ -276,6 +280,7 @@ Aadhaar UID: 8721-3312-9014
             )
             db.add(doc)
             db.flush()
+
 
             verif = VerificationRecord(
                 verification_id=v_id,

@@ -63,14 +63,18 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="Either file or preset_type must be provided")
 
     doc = Document(
+        owner_user_id=1,
         verification_id=verification_id,
         file_path=dest_path,
         file_name=display_name,
+        storage_key=f"uploads/{verification_id}_{display_name}",
+        sha256=file_hash,
         file_size=file_size,
         mime_type=mime_type,
         file_hash=file_hash
     )
     db.add(doc)
+
     db.commit()
     db.refresh(doc)
 

@@ -4,21 +4,8 @@ from sqlalchemy.orm import relationship
 from app.database.base import Base
 from app.models.user import User, UserRole
 
-class Document(Base):
-    __tablename__ = "documents"
+from app.models.document import Document, DocumentStatus
 
-    id = Column(Integer, primary_key=True, index=True)
-    verification_id = Column(String(100), unique=True, index=True, nullable=False)
-    file_path = Column(String(500), nullable=False)
-    file_name = Column(String(255), nullable=False)
-    file_size = Column(Integer, default=0)
-    mime_type = Column(String(100), default="application/pdf")
-    file_hash = Column(String(64), index=True, nullable=False)  # SHA-256
-    ocr_raw_text = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    land_record = relationship("LandRecord", back_populates="document", uselist=False)
-    verification = relationship("VerificationRecord", back_populates="document", uselist=False)
 
 class LandRecord(Base):
     __tablename__ = "land_records"

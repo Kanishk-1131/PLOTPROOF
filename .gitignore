@@ -35,6 +35,10 @@ build/
 *.key
 *.secret
 
-# Database
+# Database & Storage
 postgres_data/
+minio_data/
 plotproof.db
+backend/plotproof.db
+backend/static/storage/
+

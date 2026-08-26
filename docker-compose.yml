@@ -101,12 +101,35 @@ services:
     networks:
       - plotproof-network
 
+  minio:
+    image: minio/minio:latest
+    container_name: plotproof-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - plotproof-network
+
+  clamav:
+    image: clamav/clamav:stable
+    container_name: plotproof-clamav
+    ports:
+      - "3310:3310"
+    networks:
+      - plotproof-network
 
 networks:
   plotproof-network:
     driver: bridge
 
-
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
+

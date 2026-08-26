@@ -50,6 +50,48 @@ export interface AuditLog {
   created_at: string;
 }
 
+export interface Layer3Document {
+  id: number;
+  owner_user_id: number;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
+  storage_key: string;
+  sha256: string;
+  status: string;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  download_url?: string;
+}
+
+export interface Layer3UploadResponse {
+  document_id: number;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  sha256: string;
+  status: string;
+  version: number;
+  is_duplicate: boolean;
+  download_url: string;
+  created_at: string;
+}
+
+export interface DocumentStatusResponse {
+  document_id: number;
+  file_name: string;
+  status: string;
+  sha256: string;
+  version: number;
+  processing?: {
+    job_type: string;
+    status: string;
+    attempts: number;
+    error_message?: string | null;
+  };
+}
+
 export interface UploadResponse {
   document_id: number;
   verification_id: string;
@@ -58,6 +100,7 @@ export interface UploadResponse {
   file_size: number;
   preview_url: string;
 }
+
 
 export interface VerificationReport {
   verification_id: string;
@@ -177,6 +220,31 @@ export const apiService = {
     return res.data;
   },
 
+  // --- LAYER 3 SECURE INGESTION & OBJECT STORAGE ---
+  async uploadSecureDocument(file: File): Promise<Layer3UploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post<Layer3UploadResponse>('/api/v1/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  async getDocumentStatus(documentId: number): Promise<DocumentStatusResponse> {
+    const res = await apiClient.get<DocumentStatusResponse>(`/api/v1/documents/${documentId}/status`);
+    return res.data;
+  },
+
+  async getDocumentDownload(documentId: number) {
+    const res = await apiClient.get<{ document_id: number; file_name: string; download_url: string; expires_in_seconds: number }>(`/api/v1/documents/${documentId}/download`);
+    return res.data;
+  },
+
+  async listUserDocuments(): Promise<Layer3Document[]> {
+    const res = await apiClient.get<Layer3Document[]>('/api/v1/documents');
+    return res.data;
+  },
+
   // --- DOCUMENT VERIFICATION PIPELINE ---
   async uploadDocument(file?: File, presetType?: string): Promise<UploadResponse> {
     const formData = new FormData();
@@ -188,6 +256,7 @@ export const apiService = {
     });
     return res.data;
   },
+
 
   async startVerification(documentId: number): Promise<VerificationReport> {
     const res = await apiClient.post<VerificationReport>(`/api/verification/start/${documentId}`);
