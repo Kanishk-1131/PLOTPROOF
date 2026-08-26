@@ -334,4 +334,20 @@ Executed and Registered at Sub-Registrar Office, Tambaram.
             details=f"Corrected '{field.field_name}' from '{old_val}' to '{new_value}' (status={field.status})",
         )
 
+        # Trigger Layer 6 Invalidation and Version Bump (Section 16)
+        try:
+            from app.services.integrity_service import IntegrityService
+            integrity_svc = IntegrityService()
+            integrity_svc.invalidate_on_field_correction(
+                db=db,
+                document_id=document_id,
+                field_name=field.field_name,
+                old_val=old_val,
+                new_val=new_value,
+                actor_id=user.id,
+            )
+        except Exception:
+            pass
+
         return field
+

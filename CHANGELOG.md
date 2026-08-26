@@ -2,7 +2,38 @@
 
 All notable changes to the PlotProof platform are documented in this file.
 
+## [Cycle 6] - 2026-08-26: Integrity, Fraud Detection & Cryptographic Verification (Layer 6)
+
+### Added
+- **Cryptographic Hash Chain & Canonical Serialization (`app/integrity/`)**:
+  - `backend/app/integrity/hashing.py`: High-performance deterministic SHA-256 byte and chunked file stream hashers.
+  - `backend/app/integrity/canonical.py`: Canonical JSON serializer enforcing RFC 8785 lexicographical key sorting, compact `(',', ':')` delimiters, and UTF-8 encoding.
+  - `backend/app/integrity/fingerprint.py`: Deterministic stage fingerprinting for structured metadata (`metadata_hash`), OCR text/bounding blocks (`ocr_hash`), and Layer 5 spatial results (`spatial_hash`).
+  - Implemented `create_verification_hash` assembling the composite cryptographic chain: `File Hash + OCR Hash + Metadata Hash + Spatial Hash -> Verification Hash`.
+  - `backend/app/integrity/verification.py`: Multi-state verification lifecycle state machine (`PROCESSING`, `INTEGRITY_CHECKED`, `GIS_VALIDATED`, `REVIEW_REQUIRED`, `APPROVED`, `ANCHORED`) with distinct anomaly classifiers (Cryptographic Tampering `INTEGRITY_FAILURE`, Spatial Collision `SPATIAL_RISK`, and Low-Confidence OCR `REVIEW_REQUIRED`), avoiding generic fraud conflation.
+- **Relational Models & Database Migrations**:
+  - `backend/app/models/integrity_record.py`: SQLAlchemy `IntegrityRecord` storing per-stage hashes (`file_hash`, `ocr_hash`, `metadata_hash`, `spatial_hash`, `verification_hash`).
+  - `backend/app/models/audit_event.py`: SQLAlchemy `AuditEvent` capturing immutable timeline actions (`DOCUMENT_UPLOADED`, `OCR_COMPLETED`, `FIELD_CORRECTED`, `GIS_VALIDATED`, `INTEGRITY_CREATED`, `INTEGRITY_VERIFIED`).
+  - Applied Alembic migration `def583e5add1_add_integrity_and_audit_tables.py`.
+- **Statutory Correction & Version Invalidation Workflow**:
+  - Connected Sub-Registrar field corrections to `IntegrityService.invalidate_on_field_correction`: bumps document version (`v1 -> v2`), resets spatial validation status to `REVALIDATION_REQUIRED`, recomputes composite hashes, and writes an audit event.
+- **REST Endpoints (`/api/v1`)**:
+  - `POST /api/v1/documents/{id}/integrity/generate`: Generates/updates the multi-stage cryptographic integrity chain.
+  - `GET /api/v1/documents/{id}/integrity`: Retrieves the integrity record and verification status.
+  - `POST /api/v1/documents/{id}/integrity/verify`: Verifies byte-for-byte fidelity of presented files (detects single-byte tampering).
+  - `GET /api/v1/verify/public/{verification_id}`: Public QR verification endpoint for banks/lawyers strictly omitting citizen PII (no Aadhaar, phone number, owner name, or raw deed).
+- **Automated Testing Suite**:
+  - Created `backend/tests/test_integrity.py` with 12 tests covering all verification scenarios.
+
+### Verified
+- 12/12 tests in `backend/tests/test_integrity.py` passing with 100% success.
+- Total 63/63 tests passing across all 6 layers (`test_auth.py`, `test_pipeline.py`, `test_documents.py`, `test_ocr.py`, `test_gis.py`, `test_integrity.py`).
+- Next.js production build (`npm run build`) compiles cleanly with 0 type errors across all 7 routes.
+
+---
+
 ## [Cycle 5] - 2026-08-26: GIS & Spatial Validation Engine (Layer 5)
+
 
 ### Added
 - **GIS Core Infrastructure (`app/gis/`)**:

@@ -322,9 +322,33 @@ export const apiService = {
     return res.data;
   },
 
+  // --- LAYER 6 INTEGRITY & CRYPTOGRAPHIC VERIFICATION ---
+  async generateIntegrity(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/integrity/generate`);
+    return res.data;
+  },
 
+  async getIntegrity(documentId: number) {
+    const res = await apiClient.get(`/api/v1/documents/${documentId}/integrity`);
+    return res.data;
+  },
+
+  async verifyDocumentTamper(documentId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/integrity/verify`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  async getPublicVerification(verificationId: string) {
+    const res = await apiClient.get(`/api/v1/verify/public/${verificationId}`);
+    return res.data;
+  },
 
   // --- DOCUMENT VERIFICATION PIPELINE ---
+
   async uploadDocument(file?: File, presetType?: string): Promise<UploadResponse> {
     const formData = new FormData();
     if (file) formData.append('file', file);
