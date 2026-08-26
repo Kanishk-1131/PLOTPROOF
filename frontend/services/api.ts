@@ -301,6 +301,28 @@ export const apiService = {
     return res.data;
   },
 
+  // --- LAYER 5 GIS & SPATIAL VALIDATION ---
+  async validateSpatial(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/spatial/validate`);
+    return res.data;
+  },
+
+  async getSpatialStatus(documentId: number) {
+    const res = await apiClient.get(`/api/v1/documents/${documentId}/spatial`);
+    return res.data;
+  },
+
+  async getSpatialMap(documentId: number) {
+    const res = await apiClient.get(`/api/v1/documents/${documentId}/spatial/map`);
+    return res.data;
+  },
+
+  async getParcel(parcelId: number) {
+    const res = await apiClient.get(`/api/v1/parcels/${parcelId}`);
+    return res.data;
+  },
+
+
 
   // --- DOCUMENT VERIFICATION PIPELINE ---
   async uploadDocument(file?: File, presetType?: string): Promise<UploadResponse> {

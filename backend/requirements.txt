@@ -21,6 +21,9 @@ requests>=2.31.0
 boto3>=1.34.0
 PyMuPDF>=1.24.0
 pytesseract>=0.3.10
+geoalchemy2>=0.14.0
+pyproj>=3.6.0
+
 
 
 

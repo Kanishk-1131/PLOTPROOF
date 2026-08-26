@@ -30,8 +30,11 @@ import app.models.document
 import app.models.processing_job
 import app.models.ocr_result
 import app.models.ocr_field
+import app.models.parcel
+import app.models.spatial_validation
 import app.models.deed
 from app.core.config import settings
+
 
 
 

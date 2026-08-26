@@ -2,7 +2,34 @@
 
 All notable changes to the PlotProof platform are documented in this file.
 
-## [Cycle 4] - 2026-08-26: OCR & Document Intelligence Engine (Layer 4)
+## [Cycle 5] - 2026-08-26: GIS & Spatial Validation Engine (Layer 5)
+
+### Added
+- **GIS Core Infrastructure (`app/gis/`)**:
+  - `backend/app/gis/crs.py`: Geodesic coordinate projection from `EPSG:4326` (degrees) to `EPSG:32644` (UTM zone 44N metric projection for Tamil Nadu / South India) eliminating degree-squared distortion in statutory area calculations.
+  - `backend/app/gis/geometry.py`: Enforces `(longitude=X, latitude=Y)` coordinate ordering, linear ring closing, geometry validation (`is_valid`, `is_empty`), and safe controlled repair (`make_valid` / safe `buffer(0)` with <= 5% area drift preservation).
+  - `backend/app/gis/overlap.py`: Topological relationship classifier (`DISJOINT`, `TOUCHING`, `OVERLAPPING`, `WITHIN`, `CONTAINS`, `IDENTICAL`), boundary touch tolerance (`TOUCH_TOLERANCE_METERS = 0.05`), exact intersection area calculation, overlap percentage, and area consistency calculation (`<= 1% NORMAL`, `1-5% REVIEW`, `> 5% HIGH_RISK`).
+  - `backend/app/gis/risk.py`: Multi-factor spatial risk scoring engine (Geometry 20%, Overlap 35%, Area Mismatch 20%, Coordinate Confidence 10%, Parcel ID 15%) producing explicit 0-100 scores and risk tiers (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+- **Relational Models & Database Migrations**:
+  - `backend/app/models/parcel.py`: SQLAlchemy `Parcel` model with database-agnostic `CompatibleGeometry` (PostGIS `Geometry(POLYGON, 4326)` on PostgreSQL and WKT text on SQLite).
+  - `backend/app/models/spatial_validation.py`: `SpatialValidation` model recording geometry validity, overlap detection, intersection area, area difference, risk score, and reproducible audit metadata (`algorithm_version`, `dataset_version`, `crs`, timestamp, result).
+  - Generated and executed Alembic migration `0406b1ae86d4_add_gis_parcel_and_spatial_validation_.py`.
+- **REST Endpoints (`/api/v1`)**:
+  - `POST /api/v1/documents/{id}/spatial/validate`: Full spatial validation execution returning Layer 5 Handshake Contract Payload.
+  - `GET /api/v1/documents/{id}/spatial`: Spatial validation results, relationship, and risk score.
+  - `GET /api/v1/documents/{id}/spatial/map`: Privacy-isolated GeoJSON FeatureCollection containing strictly candidate and reference parcels.
+  - `GET /api/v1/parcels/{id}`: Reference cadastral parcel inspection.
+- **Automated Testing Suite**:
+  - Created `backend/tests/test_gis.py` covering 12 comprehensive unit and spatial tests (Coordinate ordering, repair, metric projection, touch vs overlap, exact overlap calculation, area tiers, risk factors, Case C text-only geometry insufficient flag, clean deed validation, spatial collision detection, privacy GeoJSON map, and reference dataset read-only invariance).
+
+### Verified
+- 12/12 tests in `backend/tests/test_gis.py` passing with 100% success.
+- Total 51/51 tests passing across all layers (`test_auth.py`, `test_pipeline.py`, `test_documents.py`, `test_ocr.py`, `test_gis.py`).
+- Next.js production build (`npm run build`) compiles cleanly with 0 type errors across all 7 routes.
+
+---
+
+
 
 ### Added
 - **OCR Engine Infrastructure**:
