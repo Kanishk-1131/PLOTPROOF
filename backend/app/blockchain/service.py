@@ -65,7 +65,12 @@ class BlockchainService:
             )
         )
         if existing_anchor and existing_anchor.status == "CONFIRMED":
+            if existing_anchor.document_id != doc.id:
+                existing_anchor.document_id = doc.id
+                db.commit()
+                db.refresh(existing_anchor)
             return self._build_anchor_response(existing_anchor, doc)
+
 
 
         # 1. PREREQUISITE VALIDATION (Section 17):
@@ -130,9 +135,11 @@ class BlockchainService:
             db.add(anchor_rec)
         else:
             anchor_rec = existing_anchor
+            anchor_rec.document_id = doc.id
             anchor_rec.transaction_hash = tx_hash
             anchor_rec.block_number = block_number
             anchor_rec.status = "CONFIRMED"
+
 
         db.commit()
         db.refresh(anchor_rec)

@@ -1,6 +1,8 @@
+import os
 import hashlib
 import io
 import uuid
+
 import socket
 from datetime import datetime, timezone
 from pathlib import Path
@@ -154,7 +156,9 @@ class DocumentService:
                 },
             )
 
-        filename = upload_file.filename or "untitled_deed.pdf"
+        raw_name = upload_file.filename or "untitled_deed.pdf"
+        filename = os.path.basename(raw_name.replace("\\", "/")).replace("..", "") or "untitled_deed.pdf"
+
 
         # 2. Validate MIME & Magic Bytes (Section 12)
         mime_type, ext = self.validate_file_header_and_type(

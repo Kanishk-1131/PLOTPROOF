@@ -32,7 +32,13 @@ storage_service = StorageService()
     response_model=DocumentUploadResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@router.post(
+    "/upload",
+    response_model=DocumentUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_document(
+
     request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),

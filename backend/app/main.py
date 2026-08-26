@@ -15,16 +15,19 @@ from app.api.documents import router as documents_router
 from app.api.ocr import router as ocr_router
 from app.api.integrity import router as integrity_router
 from app.api.privacy import router as privacy_router
+from app.api.certificate import router as certificate_router
 from app.services.storage_init import ensure_bucket_exists
-
-
-
+from app.middleware.security import SecurityHeadersMiddleware, RequestIDMiddleware
 
 app = FastAPI(
     title="PlotProof API",
     description="Multi-Vector Forensic Land Title Verification: Document OCR, Cadastral GIS, SHA-256 Blockchain Registry, and ZK Privacy.",
     version="1.0.0"
 )
+
+# Apply Security Headers and Request Tracing (Layer 10)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 # Enable CORS for Next.js Frontend
 app.add_middleware(
@@ -45,14 +48,13 @@ app.include_router(documents_router)
 app.include_router(ocr_router)
 app.include_router(integrity_router)
 app.include_router(privacy_router)
+app.include_router(certificate_router)
 app.include_router(upload_router)
-
-
-
 app.include_router(verification_router)
 app.include_router(gis_router)
 app.include_router(blockchain_router)
 app.include_router(public_router)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -79,6 +81,28 @@ async def health():
         "status": "healthy",
         "service": "plotproof-backend",
     }
+
+@app.get("/ready")
+def readiness_check():
+    from app.database.connection import SessionLocal
+    from sqlalchemy import text
+    db_ok = False
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        pass
+    finally:
+        db.close()
+
+    storage_ok = os.path.exists(str(STATIC_DIR))
+    return {
+        "status": "ready" if (db_ok and storage_ok) else "not_ready",
+        "database": "connected" if db_ok else "disconnected",
+        "storage": "accessible" if storage_ok else "inaccessible",
+    }
+
 
 @app.get("/api/health")
 def health_check():

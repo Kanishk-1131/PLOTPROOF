@@ -70,3 +70,7 @@ def decode_token(token: str) -> dict[str, Any]:
         algorithms=["HS256"],
     )
 
+
+decode_access_token = decode_token
+
+

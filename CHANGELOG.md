@@ -2,7 +2,56 @@
 
 All notable changes to the PlotProof platform are documented in this file.
 
+## [Cycle 10] - 2026-08-26: Production Security, Authentication & Deployment (Layer 10)
+
+### Added
+- **Production Security Middleware (`backend/app/middleware/security.py`)**:
+  - `SecurityHeadersMiddleware`: Injects Content Security Policy (`CSP`), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and HTTP Strict Transport Security (`HSTS`).
+  - `RequestIDMiddleware`: End-to-end traceable `X-Request-ID` and latency telemetry (`X-Response-Time-Ms`).
+  - `InMemoryRateLimiter`: Adaptive sliding-window rate limiter differentiating standard operations from CPU-heavy operations (OCR extraction, ZK Groth16 proving).
+- **Secure File Validation & Boundary Enforcement**:
+  - Magic bytes and MIME signature verification blocking disguised executables and shell scripts.
+  - Path traversal protection (`../../`) with filename sanitization and object-storage quarantine.
+  - Hard file size limit (50MB) preventing upload-based denial of service.
+- **Enterprise Infrastructure & Disaster Recovery**:
+  - `infrastructure/nginx/nginx.conf`: Production Nginx reverse proxy with rate limiting zones, upload body sizing, TLS, and static proxy caching.
+  - `infrastructure/scripts/backup.sh`: PostgreSQL/PostGIS dump and encrypted object storage snapshot script with automated 30-day retention policies.
+  - `.github/workflows/ci.yml`: Full GitHub Actions CI/CD matrix executing linting, multi-layer backend tests, contract tests, and Next.js production builds.
+- **System Health Probes**:
+  - `GET /health`: Fast liveness probe.
+  - `GET /ready`: Comprehensive readiness probe verifying PostgreSQL/SQLite and storage availability.
+- **Automated Security & RBAC Test Suite**:
+  - `backend/tests/test_security.py` (12 tests) verifying IDOR cross-tenant isolation, RBAC privilege enforcement, security headers, magic bytes, path traversal sanitization, rate limiting, and minimal JWT claims.
+
+---
+
+## [Cycle 9] - 2026-08-26: Certificate Generation & Public Verification Portal (Layer 9)
+
+### Added
+- **Tamper-Evident Verification Certificate Generator (`backend/app/certificate/`)**:
+  - `backend/app/certificate/generator.py`: Generates professional, publication-ready PDF certificate via ReportLab.
+  - Generates distinct human-readable Certificate Number (`PP-CERT-2026-000052`) separate from Verification ID (`PP-2026-000052`).
+  - Computes SHA-256 byte digest (`certificate_hash`) stored in database for byte-level tamper verification.
+  - Strictly enforces statutory legal disclaimer:
+    *"PlotProof System Verification Certificate. This certificate confirms the verification results produced by the PlotProof system. It does not independently constitute a government-issued title document or legal title guarantee."*
+- **Public Verification QR Generator (`backend/app/certificate/qr.py`)**:
+  - Produces crisp, pure public verification URL QR codes (`https://plotproof.gov.in/verify/{verification_id}`) strictly omitting citizen PII, raw deeds, and private keys.
+- **Certificate Revocation & Audit Machine**:
+  - Revocation workflow (`POST /api/v1/certificates/{id}/revoke`) restricted strictly to Registrar and Admin roles.
+  - Invalidates active certificates to `REVOKED` state with reason, actor, and timestamp.
+  - Public portal dynamically displays `! CERTIFICATE REVOKED` banner.
+- **Relational Models & Database Migrations**:
+  - `backend/app/models/certificate.py`: `Certificate` storing `document_id`, `verification_id`, `certificate_number`, `certificate_hash`, `file_path`, `status`, `revoked_at`, `revocation_reason`, and `revoked_by`.
+  - Applied Alembic migration `76e46ab2965f_add_certificates_table.py`.
+- **Public Verification Portal Frontend**:
+  - `frontend/app/verify/[verificationId]/page.tsx`: Modern Next.js verification page handling `VERIFIED`, `REVOKED`, `BLOCKCHAIN_PENDING`, `REVIEW_REQUIRED`, and `SPATIAL_RISK`.
+- **Automated Testing Suite**:
+  - `backend/tests/test_certificate.py` (12 tests) verifying PDF generation, prerequisite gating, QR encoding, download access control, SHA-256 tamper verification, revocation, and zero-PII public exposure.
+
+---
+
 ## [Cycle 8] - 2026-08-26: Blockchain & Smart Contract Anchoring (Layer 8)
+
 
 ### Added
 - **Smart Contract Architecture (`blockchain/contracts/PlotProofRegistry.sol`)**:

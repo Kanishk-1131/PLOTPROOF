@@ -36,8 +36,10 @@ import app.models.integrity_record
 import app.models.audit_event
 import app.models.zk_proof
 import app.models.blockchain_anchor
+import app.models.certificate
 import app.models.deed
 from app.core.config import settings
+
 
 
 

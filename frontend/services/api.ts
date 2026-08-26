@@ -343,7 +343,7 @@ export const apiService = {
   },
 
   async getPublicVerification(verificationId: string) {
-    const res = await apiClient.get(`/api/v1/verify/public/${verificationId}`);
+    const res = await apiClient.get(`/api/v1/public/verify/${verificationId}`);
     return res.data;
   },
 
@@ -432,6 +432,44 @@ export const apiService = {
   async getBlockchainRecord(verificationId: string) {
     const res = await apiClient.get(`/api/blockchain/${verificationId}`);
     return res.data;
+  },
+
+  // --- LAYER 9 CERTIFICATE GENERATION & PUBLIC PORTAL ---
+  async generateCertificate(documentId: number) {
+    const res = await apiClient.post(`/api/v1/documents/${documentId}/certificate`);
+    return res.data;
+  },
+
+  async getCertificate(documentId: number) {
+    const res = await apiClient.get(`/api/v1/documents/${documentId}/certificate`);
+    return res.data;
+  },
+
+  async getCertificateByVerificationId(verificationId: string) {
+    const res = await apiClient.get(`/api/v1/verification/${verificationId}/certificate`);
+    return res.data;
+  },
+
+  async revokeCertificate(certificateId: number, reason: string) {
+    const res = await apiClient.post(`/api/v1/certificates/${certificateId}/revoke`, { reason });
+    return res.data;
+  },
+
+  async verifyCertificateIntegrity(certificateNumber: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post(`/api/v1/certificates/${certificateNumber}/verify-integrity`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+
+  // --- LAYER 10 HEALTH & READINESS ---
+  async getReadiness() {
+    const res = await apiClient.get('/ready');
+    return res.data;
   }
 };
+
 
