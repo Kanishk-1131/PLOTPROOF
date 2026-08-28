@@ -247,24 +247,27 @@ Aadhaar UID: 8721-3312-9014
     with open(os.path.join(uploads_dir, "sample_collision_142_3B.txt"), "w", encoding="utf-8") as f:
         f.write(collision_text)
 
-    # 4. Seed Seed Initial Verification History for Rich Dashboard Analytics
-    if db.query(VerificationRecord).count() == 0:
-        base_time = datetime.utcnow() - timedelta(days=5)
-        seed_history = [
-            ("PP-2026-00139", "142/1", "VERIFIED", 96.5, False, False, "7c3e8f2c9a11..."),
-            ("PP-2026-00140", "142/2", "VERIFIED", 98.0, False, False, "9f4e2a1b8c22..."),
-            ("PP-2026-00141", "142/3B", "SPATIAL_COLLISION", 45.0, True, False, "3b1d7e8a9f33..."),
-            ("PP-2026-00138", "142/4", "MANUAL_REVIEW", 68.0, False, False, "6a2c9f1e4d44..."),
-            ("PP-2026-00137", "142/3A-MOD", "TAMPER_ALERT", 35.0, False, True, "e4d2a9f1b755..."),
-        ]
+    # 4. Seed Initial Verification History for Rich Dashboard Analytics
+    base_time = datetime.utcnow() - timedelta(days=5)
+    seed_history = [
+        ("PP-2026-00139", "142/3A", "VERIFIED", 96.5, False, False, "7c3e8f2c9a11..."),
+        ("PP-2026-00140", "142/2", "VERIFIED", 98.0, False, False, "9f4e2a1b8c22..."),
+        ("PP-2026-00141", "142/3B", "SPATIAL_COLLISION", 45.0, True, False, "3b1d7e8a9f33..."),
+        ("PP-2026-00138", "142/4", "MANUAL_REVIEW", 68.0, False, False, "6a2c9f1e4d44..."),
+        ("PP-2026-00137", "142/3A-MOD", "TAMPER_ALERT", 35.0, False, True, "e4d2a9f1b755..."),
+    ]
 
-        for v_id, s_no, status, score, coll, tamp, d_hash in seed_history:
-            doc_file = os.path.join(uploads_dir, f"{v_id}.txt")
-            sample_content = tampered_text if tamp else (collision_text if coll else genuine_text)
-            with open(doc_file, "w", encoding="utf-8") as f:
-                f.write(sample_content)
 
-            d_sha = hashlib.sha256(v_id.encode()).hexdigest()
+
+    for v_id, s_no, status, score, coll, tamp, d_hash in seed_history:
+        doc_file = os.path.join(uploads_dir, f"{v_id}.txt")
+        sample_content = tampered_text if tamp else (collision_text if coll else genuine_text)
+        with open(doc_file, "w", encoding="utf-8") as f:
+            f.write(sample_content)
+
+        d_sha = hashlib.sha256(v_id.encode()).hexdigest()
+        doc = db.query(Document).filter(Document.verification_id == v_id).first()
+        if not doc:
             doc = Document(
                 owner_user_id=1,
                 verification_id=v_id,
@@ -275,13 +278,18 @@ Aadhaar UID: 8721-3312-9014
                 file_hash=d_sha,
                 file_size=245890,
                 mime_type="application/pdf",
-                ocr_raw_text=f"Sample Deed for {s_no}",
+                ocr_raw_text=sample_content,
                 created_at=base_time
             )
             db.add(doc)
             db.flush()
+        else:
+            doc.file_path = doc_file
+            doc.file_name = f"Deed_{s_no.replace('/', '_')}.pdf"
+            doc.ocr_raw_text = sample_content
 
-
+        verif = db.query(VerificationRecord).filter(VerificationRecord.verification_id == v_id).first()
+        if not verif:
             verif = VerificationRecord(
                 verification_id=v_id,
                 document_id=doc.id,
@@ -297,6 +305,8 @@ Aadhaar UID: 8721-3312-9014
             )
             db.add(verif)
 
+        bc = db.query(BlockchainRecord).filter(BlockchainRecord.verification_id == v_id).first()
+        if not bc:
             bc = BlockchainRecord(
                 verification_id=v_id,
                 document_hash=hashlib.sha256(v_id.encode()).hexdigest(),
@@ -305,9 +315,11 @@ Aadhaar UID: 8721-3312-9014
                 created_at=base_time
             )
             db.add(bc)
-            base_time += timedelta(hours=14)
+        base_time += timedelta(hours=14)
 
-        db.commit()
+    db.commit()
+
+
 
     db.close()
     print("Database successfully seeded with cadastral plots, test deeds, and historical audits.")

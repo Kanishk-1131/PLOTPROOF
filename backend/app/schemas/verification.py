@@ -4,6 +4,16 @@ from pydantic import BaseModel, Field
 from app.schemas.document import DocumentUploadResponse
 
 
+class UploadResponse(BaseModel):
+    document_id: int
+    verification_id: str
+    file_name: str
+    file_hash: str
+    file_size: int
+    preview_url: str
+
+
+
 class FullVerificationResponse(BaseModel):
     class Config:
         extra = "allow"

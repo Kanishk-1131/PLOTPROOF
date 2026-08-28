@@ -91,3 +91,25 @@ def review_verification_endpoint(
         actor=current_user,
     )
     return orchestrator.get_verification_full_status(db=db, verification_id=verif.verification_id)
+
+
+@router.get("/{verification_id}/report/docx")
+def download_v1_docx_report(
+    verification_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Downloads the forensic audit report as a Microsoft Word (.docx) document.
+    """
+    from fastapi.responses import StreamingResponse
+    from app.services.report_document_service import ReportDocumentService
+
+    report_data = orchestrator.build_frontend_report(db, verification_id)
+    docx_buffer = ReportDocumentService.generate_docx_report(report_data)
+    filename = f"PlotProof_Forensic_Audit_{verification_id}.docx"
+
+    return StreamingResponse(
+        docx_buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )

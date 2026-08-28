@@ -46,5 +46,9 @@ backend/storage/
 storage/
 .coverage
 htmlcov/
+backend/static/qr/
+*.tsbuildinfo
+backend/static/uploads/PP-*
+frontend/public/PP-*
 
 

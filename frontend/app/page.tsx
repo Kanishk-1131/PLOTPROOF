@@ -120,28 +120,49 @@ export default function HomePage() {
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">DEMO 1</span>
+                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">DEMO 1 (DEFAULT)</span>
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
               </div>
-              <h3 className="font-bold text-white text-base group-hover:text-emerald-300 transition-colors">Genuine Land Deed</h3>
+              <h3 className="font-bold text-white text-base group-hover:text-emerald-300 transition-colors">Default Genuine Title Deed</h3>
               <p className="text-xs text-slate-400 mt-1.5">
-                Deed for Survey 142/3A (2400 sq.ft). Reconstructs boundary, validates zero overlap, verifies SHA-256 fingerprint, and generates verifiable QR Certificate.
+                Clean Deed for Survey 142/3A (2,400 sq.ft, Selaiyur). Reconstructs boundary, validates zero overlap, verifies SHA-256 fingerprint, and generates verifiable QR Certificate.
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-emerald-400">
-              <span>Expected: ✓ VERIFIED (99%)</span>
+              <span>Expected: ✓ VERIFIED (100%)</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
           {/* Demo 2 */}
           <Link
+            href="/upload?preset=review_required"
+            className="group glass-card p-5 rounded-xl border border-amber-500/30 hover:border-amber-400 transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/10 flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">DEMO 2 (AUTHORITY REVIEW)</span>
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <h3 className="font-bold text-white text-base group-hover:text-amber-300 transition-colors">Authority Review Required Deed</h3>
+              <p className="text-xs text-slate-400 mt-1.5">
+                Deed for Survey 142/3B overlapping Survey 142/3A by 17.8 sq.m. Triggers Sub-Registrar statutory review gate with full reason & authority approval override.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-amber-300">
+              <span>Expected: ⚠ REVIEW REQUIRED</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Demo 3 */}
+          <Link
             href="/upload?preset=tampered"
             className="group glass-card p-5 rounded-xl border border-purple-500/30 hover:border-purple-400 transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/10 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">DEMO 2</span>
+                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">DEMO 3</span>
                 <Lock className="w-5 h-5 text-purple-400" />
               </div>
               <h3 className="font-bold text-white text-base group-hover:text-purple-300 transition-colors">Tampered Deed (Forged Area)</h3>
@@ -151,27 +172,6 @@ export default function HomePage() {
             </div>
             <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-purple-300">
               <span>Expected: ⚠ TAMPER ALERT</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Demo 3 */}
-          <Link
-            href="/upload?preset=collision"
-            className="group glass-card p-5 rounded-xl border border-red-500/30 hover:border-red-400 transition-all duration-200 hover:shadow-lg hover:shadow-red-500/10 flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40">DEMO 3</span>
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-              </div>
-              <h3 className="font-bold text-white text-base group-hover:text-red-300 transition-colors">Spatial Collision Encroachment</h3>
-              <p className="text-xs text-slate-400 mt-1.5">
-                Deed for Survey 142/3B overlapping Survey 142/3A by 17.8 sq.m. GIS engine performs intersection and highlights collision danger zone in red on Leaflet map.
-              </p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-red-400">
-              <span>Expected: ⚠ SPATIAL COLLISION</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

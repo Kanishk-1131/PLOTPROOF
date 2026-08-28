@@ -107,15 +107,7 @@ class ZKService:
         is_approved = bool(verif and verif.review_decision == "APPROVED")
 
         is_integrity_valid = bool(integrity_rec and integrity_rec.file_hash)
-        is_gis_valid = bool(val_rec and val_rec.geometry_valid and not val_rec.overlap_detected)
-
-        # Check if doc has an intentional collision or tamper
-        if "overlap" in doc.file_name.lower() or "collision" in doc.file_name.lower() or "tamper" in doc.file_name.lower():
-            is_gis_valid = False
-
-        if is_approved:
-            is_gis_valid = True
-
+        is_gis_valid = bool(val_rec and val_rec.geometry_valid and not val_rec.overlap_detected) or is_approved
 
         if not is_integrity_valid or not is_gis_valid:
             raise HTTPException(
@@ -129,6 +121,7 @@ class ZKService:
                     },
                 },
             )
+
 
         # 2. Derive private inputs and secret (ephemeral, not persisted)
         secret = generate_commitment_secret()

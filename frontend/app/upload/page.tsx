@@ -23,8 +23,10 @@ function UploadContent() {
   const presetParam = searchParams.get('preset');
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(presetParam || null);
+  // Default to 'genuine' demo deed if no preset in query params
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(presetParam || 'genuine');
   const [uploadData, setUploadData] = useState<UploadResponse | null>(null);
+  const [showInspector, setShowInspector] = useState(false);
   
   const [isVerifying, setIsVerifying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -59,11 +61,15 @@ function UploadContent() {
     }
   };
 
+  const handleResetToDefault = () => {
+    setSelectedPreset('genuine');
+    setSelectedFile(null);
+    setErrorMsg(null);
+  };
+
   const handleRunVerification = async () => {
-    if (!selectedFile && !selectedPreset) {
-      setErrorMsg('Please select a sample preset deed or upload a deed file to proceed.');
-      return;
-    }
+    // If neither file nor preset is selected, automatically fallback to 'genuine'
+    const effectivePreset = selectedFile ? undefined : (selectedPreset || 'genuine');
 
     try {
       setIsVerifying(true);
@@ -73,7 +79,7 @@ function UploadContent() {
       // Step 1: Upload
       const uploadRes = await apiService.uploadDocument(
         selectedFile || undefined,
-        selectedPreset || undefined
+        effectivePreset
       );
       setUploadData(uploadRes);
       setCurrentStep(1);
@@ -103,6 +109,37 @@ function UploadContent() {
     }
   };
 
+  const demoTextGenuine = `GOVERNMENT OF TAMIL NADU - REGISTRATION DEPARTMENT
+TITLE DEED OF SALE / ABSOLUTE CONVEYANCE DEED
+Document Registration Number: 4821/2024
+Book 1, Volume 912, Pages 101 to 114
+Sub-Registrar Office: Tambaram
+
+DISTRICT: Chennai
+TALUK: Tambaram
+VILLAGE: Selaiyur Village
+SURVEY NUMBER: 142/3A
+
+EXTENT AND MEASUREMENT OF PROPERTY:
+All that piece and parcel of land bearing Survey No: 142/3A, measuring an area of 2,400 Sq.ft (equivalent to 222.96 Sq.meters / 5.5 Cents).
+
+BOUNDARIES:
+North by: Survey No 142/2 (Road 30ft width)
+South by: Survey No 142/4 (Vacant Plot)
+East by: Survey No 142/3B (Adjacent Plot)
+West by: Survey No 142/1 (Residential Property)
+
+COORDINATES:
+GPS Reference Bounds: 12.9249 N, 80.1472 E to 12.9255 N, 80.1478 E
+
+PURCHASER / TITLE HOLDER:
+Name: K. S. Ramanathan
+Son of: Late K. Sundaram
+Aadhaar UID: 5412-8823-8912
+
+REGISTERED HASH COMMITMENT:
+7c3e8f2c9a620d41e7845f096231ba4190284e91240185e2b028941785e091ad`;
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       
@@ -114,8 +151,81 @@ function UploadContent() {
         </div>
         <h1 className="text-3xl font-extrabold text-white">Upload Land Title Deed</h1>
         <p className="text-sm text-slate-400 max-w-xl mx-auto">
-          Submit a scanned conveyance deed or select a pre-calibrated demo scenario to run automated OCR extraction, cadastral boundary overlap checks, and on-chain tamper detection.
+          Submit a scanned conveyance deed or test with our pre-loaded default demonstration document to run automated OCR extraction, cadastral boundary overlap checks, and on-chain tamper detection.
         </p>
+      </div>
+
+      {/* Default Document Feature Banner */}
+      <div className="glass-panel p-5 sm:p-6 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-teal-950/30 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40">
+                  DEFAULT DEMONSTRATION DOCUMENT
+                </span>
+                <span className="text-[11px] font-semibold text-slate-300">Ready to Test</span>
+              </div>
+              <h2 className="text-base font-bold text-white mt-0.5">
+                Tamil Nadu Title Deed — Survey 142/3A, Selaiyur
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowInspector(!showInspector)}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{showInspector ? 'Hide Text' : 'Inspect Text'}</span>
+            </button>
+            <a
+              href="/static/uploads/sample_default_deed.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 transition-colors flex items-center gap-1.5"
+            >
+              <span>Download PDF</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800 text-xs">
+          <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+            <span className="text-[10px] text-slate-500 font-mono block">SURVEY NO</span>
+            <span className="font-bold text-emerald-400">142/3A</span>
+          </div>
+          <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+            <span className="text-[10px] text-slate-500 font-mono block">AREA EXTENT</span>
+            <span className="font-bold text-slate-200">2,400 Sq.ft (222.96 m²)</span>
+          </div>
+          <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+            <span className="text-[10px] text-slate-500 font-mono block">LOCATION</span>
+            <span className="font-bold text-slate-200">Selaiyur, Tambaram</span>
+          </div>
+          <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+            <span className="text-[10px] text-slate-500 font-mono block">INTEGRITY STATUS</span>
+            <span className="font-bold text-emerald-400">✓ 100% Genuine Match</span>
+          </div>
+        </div>
+
+        {/* Collapsible Deed Text Inspector */}
+        {showInspector && (
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 font-mono text-[11px] text-slate-300 space-y-2 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between text-slate-500 text-[10px] border-b border-slate-800 pb-1">
+              <span>RAW DEED STREAM (sample_genuine_142_3A.txt)</span>
+              <span>SHA-256: 7c3e8f2c9a620d41...</span>
+            </div>
+            <pre className="whitespace-pre-wrap leading-relaxed overflow-x-auto text-slate-300 text-[11px]">
+              {demoTextGenuine}
+            </pre>
+          </div>
+        )}
       </div>
 
       {/* 3 Demo Preset Quick Selectors */}
@@ -123,74 +233,113 @@ function UploadContent() {
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span>1-Click Demonstration Presets</span>
+            <span>Select Demonstration Scenario</span>
           </h2>
-          <span className="text-[11px] font-mono text-slate-400">Instant Test Cases</span>
+          <span className="text-[11px] font-mono text-slate-400">Instant Pre-calibrated Test Cases</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           
-          {/* Preset 1 */}
+          {/* Preset 1 (Default: Genuine) */}
           <button
             type="button"
             onClick={() => handlePresetSelect('genuine')}
             className={`p-4 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
               selectedPreset === 'genuine'
-                ? 'bg-emerald-950/40 border-emerald-400 shadow-lg shadow-emerald-500/15'
+                ? 'bg-emerald-950/40 border-emerald-400 shadow-lg shadow-emerald-500/15 ring-1 ring-emerald-400/50'
                 : 'glass-card border-slate-800 hover:border-slate-700'
             }`}
           >
             <div>
-              <span className="text-[10px] font-mono font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                CASE 1
-              </span>
-              <h3 className="font-bold text-white text-sm mt-2">Genuine Deed</h3>
-              <p className="text-xs text-slate-400 mt-1">Survey 142/3A (2400 sq.ft) • 0 Collisions</p>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                  CASE 1 (DEFAULT)
+                </span>
+                {selectedPreset === 'genuine' && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                )}
+              </div>
+              <h3 className="font-bold text-white text-sm mt-2">Genuine Title Deed</h3>
+              <p className="text-xs text-slate-400 mt-1">Survey 142/3A (2,400 sq.ft) • Clean Title</p>
             </div>
-            <div className="mt-3 text-[11px] font-semibold text-emerald-400">✓ Passes all checks</div>
+            <div className="mt-3 text-[11px] font-semibold text-emerald-400">✓ Expected: VERIFIED</div>
           </button>
 
-          {/* Preset 2 */}
+          {/* Preset 2 (Authority Review Required) */}
+          <button
+            type="button"
+            onClick={() => handlePresetSelect('review_required')}
+            className={`p-4 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
+              selectedPreset === 'review_required' || selectedPreset === 'collision'
+                ? 'bg-amber-950/40 border-amber-400 shadow-lg shadow-amber-500/15 ring-1 ring-amber-400/50'
+                : 'glass-card border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold text-amber-300 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                  CASE 2 (AUTHORITY REVIEW)
+                </span>
+                {(selectedPreset === 'review_required' || selectedPreset === 'collision') && (
+                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                )}
+              </div>
+              <h3 className="font-bold text-white text-sm mt-2">Authority Review Deed</h3>
+              <p className="text-xs text-slate-400 mt-1">Survey 142/3B • 17.8 m² Cadastral Dispute</p>
+            </div>
+            <div className="mt-3 text-[11px] font-semibold text-amber-300">⚠ Expected: REVIEW_REQUIRED</div>
+          </button>
+
+          {/* Preset 3 (Tampered) */}
           <button
             type="button"
             onClick={() => handlePresetSelect('tampered')}
             className={`p-4 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
               selectedPreset === 'tampered'
-                ? 'bg-purple-950/40 border-purple-400 shadow-lg shadow-purple-500/15'
+                ? 'bg-purple-950/40 border-purple-400 shadow-lg shadow-purple-500/15 ring-1 ring-purple-400/50'
                 : 'glass-card border-slate-800 hover:border-slate-700'
             }`}
           >
             <div>
-              <span className="text-[10px] font-mono font-bold text-purple-300 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
-                CASE 2
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold text-purple-300 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                  CASE 3
+                </span>
+                {selectedPreset === 'tampered' && (
+                  <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                )}
+              </div>
               <h3 className="font-bold text-white text-sm mt-2">Tampered Deed</h3>
-              <p className="text-xs text-slate-400 mt-1">Area Forged: 2400 &rarr; 3400 sq.ft</p>
+              <p className="text-xs text-slate-400 mt-1">Area Forged: 2,400 &rarr; 3,400 sq.ft</p>
             </div>
-            <div className="mt-3 text-[11px] font-semibold text-purple-300">⚠ Hash Mismatch Alert</div>
-          </button>
-
-          {/* Preset 3 */}
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('collision')}
-            className={`p-4 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
-              selectedPreset === 'collision'
-                ? 'bg-red-950/40 border-red-400 shadow-lg shadow-red-500/15'
-                : 'glass-card border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div>
-              <span className="text-[10px] font-mono font-bold text-red-400 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20">
-                CASE 3
-              </span>
-              <h3 className="font-bold text-white text-sm mt-2">Spatial Collision</h3>
-              <p className="text-xs text-slate-400 mt-1">Survey 142/3B Overlaps by 17.8 m²</p>
-            </div>
-            <div className="mt-3 text-[11px] font-semibold text-red-400">⚠ GIS Overlap Alert</div>
+            <div className="mt-3 text-[11px] font-semibold text-purple-300">⚠ Expected: TAMPER_ALERT</div>
           </button>
 
         </div>
+
+        {/* Selected Preset Reason Context Card */}
+        {(selectedPreset === 'review_required' || selectedPreset === 'collision') && (
+          <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-amber-300 block font-semibold">Reason for Authority Review:</strong>
+                <p className="text-slate-300 text-[11px] leading-relaxed mt-0.5">
+                  This deed contains a 17.8 m² cadastral boundary overlap with registered parcel Survey No. 142/3A. Under Section 34 & 35 of the Registration Act, 1908, the Sub-Registrar / Revenue Authority must physically inspect or hold a statutory hearing before clear title can be confirmed.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleRunVerification}
+              disabled={isVerifying}
+              className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center space-x-1.5"
+            >
+              <span>⚡ Run Authority Verification</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* File Upload Zone */}
@@ -211,12 +360,31 @@ function UploadContent() {
             <UploadCloud className="w-7 h-7 text-emerald-400" />
           </div>
           <h3 className="text-base font-bold text-white">
-            {selectedFile ? selectedFile.name : selectedPreset ? `Selected Preset: ${selectedPreset.toUpperCase()}` : 'Drag & drop land deed or browse'}
+            {selectedFile 
+              ? `Selected Custom File: ${selectedFile.name}` 
+              : selectedPreset 
+              ? `Armed Preset: ${selectedPreset.toUpperCase()} (Click below to verify)` 
+              : 'Drag & drop land deed or browse'}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            Supports PDF, JPG, PNG, TIFF, or plain text deeds (Max 25MB)
+            {selectedFile 
+              ? `${(selectedFile.size / 1024).toFixed(1)} KB • Ready for automated multi-vector verification`
+              : 'Supports PDF, JPG, PNG, TIFF, or plain text deeds (Max 25MB). Default demonstration document is armed.'}
           </p>
         </label>
+
+        {selectedFile && (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              className="text-xs font-mono text-emerald-400 hover:underline flex items-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Reset to Default Demo Document</span>
+            </button>
+          </div>
+        )}
 
         {errorMsg && (
           <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center justify-center gap-2">
@@ -265,7 +433,6 @@ function UploadContent() {
             {steps.map((step, idx) => {
               const isDone = currentStep > idx + 1;
               const isCurrent = currentStep === idx + 1;
-              const isWaiting = currentStep < idx + 1;
 
               return (
                 <div

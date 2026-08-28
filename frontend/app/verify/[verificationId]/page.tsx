@@ -17,7 +17,13 @@ import {
   Building2,
   Calendar,
   Hash,
-  AlertCircle
+  AlertCircle,
+  Download,
+  QrCode,
+  Award,
+  Sparkles,
+  Eye,
+  FileDown
 } from 'lucide-react';
 import { apiService } from '@/services/api';
 
@@ -263,6 +269,56 @@ export default function VerificationPortalPage() {
                           View PolygonScan Transaction <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
+                    </div>
+                  )}
+
+                  {/* Genuine Land Title Certificate & Scannable QR Actions (When Verified) */}
+                  {data.status === 'VERIFIED' && (
+                    <div className="p-5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-teal-950/30 border border-emerald-500/40 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Award className="w-5 h-5 text-emerald-400" />
+                          <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                            GENUINE TITLE CERTIFICATE & SCANNABLE QR
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          ✓ AUTHENTIC LAND TITLE
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-300">
+                        This property has been cryptographically certified with clean boundaries and immutable Polygon blockchain registration. Download the official PDF certificate or scan the QR code to verify anywhere.
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                        <a
+                          href={apiService.getCertificatePdfUrl(data.verification_id || rawId)}
+                          download={`PlotProof_Certificate_${data.verification_id || rawId}.pdf`}
+                          className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/25 transition active:scale-95 cursor-pointer"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Download Certificate (PDF)</span>
+                        </a>
+
+                        <a
+                          href={apiService.getCertificateQrDownloadUrl(data.verification_id || rawId)}
+                          download={`PlotProof_QR_${data.verification_id || rawId}.png`}
+                          className="w-full sm:w-auto py-2.5 px-4 rounded-xl glass-panel hover:bg-slate-800 text-emerald-400 text-xs font-bold flex items-center justify-center space-x-2 border border-emerald-500/30 transition active:scale-95 cursor-pointer"
+                          title="Download scannable QR Code PNG image"
+                        >
+                          <QrCode className="w-4 h-4" />
+                          <span>Download QR (PNG)</span>
+                        </a>
+
+                        <Link
+                          href={`/certificate/${data.verification_id || rawId}`}
+                          className="w-full sm:w-auto py-2.5 px-4 rounded-xl glass-panel hover:bg-slate-800 text-slate-200 text-xs font-medium flex items-center justify-center space-x-2 border border-slate-700 transition active:scale-95"
+                        >
+                          <Eye className="w-4 h-4 text-emerald-400" />
+                          <span>View Certificate</span>
+                        </Link>
+                      </div>
                     </div>
                   )}
 

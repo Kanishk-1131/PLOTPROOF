@@ -264,22 +264,31 @@ class CertificateService:
         integrity = db.scalar(select(IntegrityRecord).where(IntegrityRecord.document_id == doc.id))
 
         # Determine overall state (Section 17)
+        from app.models.verification import Verification
+        verif = db.scalar(select(Verification).where(Verification.document_id == doc.id))
+        is_approved = bool(verif and (verif.review_decision == "APPROVED" or verif.status == "VERIFIED"))
+
         if cert and cert.status == "REVOKED":
             overall_status = "REVOKED"
+        elif verif and verif.status == "VERIFIED":
+            overall_status = "VERIFIED"
         elif not anchor or anchor.status != "CONFIRMED":
             overall_status = "BLOCKCHAIN_PENDING"
-        elif not spatial or not spatial.geometry_valid or spatial.overlap_detected:
+        elif (not spatial or not spatial.geometry_valid or spatial.overlap_detected) and not is_approved:
             overall_status = "SPATIAL_RISK"
         elif not integrity or not integrity.file_hash:
             overall_status = "INTEGRITY_FAILURE"
         else:
             overall_status = "VERIFIED"
 
+        spatial_status = "PASSED" if (spatial and spatial.geometry_valid and not spatial.overlap_detected) or is_approved else "FAILED"
+
         return PublicVerificationPortalResponse(
             verification_id=doc.verification_id,
             status=overall_status,
             document_integrity="PASSED" if integrity and integrity.file_hash else "FAILED",
-            spatial_validation="PASSED" if spatial and spatial.geometry_valid and not spatial.overlap_detected else "FAILED",
+            spatial_validation=spatial_status,
+
             privacy_proof="VALID" if zk and zk.status == "VERIFIED" else "PENDING",
             blockchain_anchor=anchor.status if anchor else "PENDING",
             verification_date=doc.created_at.strftime("%Y-%m-%d") if doc.created_at else "2026-08-26",

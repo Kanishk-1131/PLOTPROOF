@@ -64,71 +64,41 @@ class OCRService:
             }
 
         raw_text = ""
-        try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                raw_text = f.read()
-        except Exception:
-            raw_text = ""
-
         filename = os.path.basename(file_path).lower()
-        if len(raw_text.strip()) < 40 or "pdf" in filename or "png" in filename or "jpg" in filename:
-            if "tamper" in filename or "forged" in filename or "modified" in filename:
-                raw_text = """
-GOVERNMENT OF TAMIL NADU - REGISTRATION DEPARTMENT
-TITLE DEED OF SALE / CONVEYANCE DEED
-Document No: 4821/2024
-District: Chennai | Taluk: Tambaram | Village: Selaiyur Village
-Survey Number: 142/3A
-Total Area Extent: 3400 Sq.ft (315.87 Sq.meters)
-Purchaser: K. S. Ramanathan, S/o Late K. Sundaram
-Aadhaar Number: 5412-8823-8912
-Boundaries:
-North by: Survey No 142/2 (Road 30ft)
-South by: Survey No 142/4 (Vacant Plot)
-East by: Survey No 142/3B (Adjacent Plot)
-West by: Survey No 142/1 (Residential Property)
-Coordinates: 12.9249 N, 80.1472 E to 12.9255 N, 80.1478 E
-Executed and Registered at Sub-Registrar Office, Tambaram.
-                """
-            elif "collision" in filename or "overlap" in filename or "142_3b" in filename:
-                raw_text = """
-GOVERNMENT OF TAMIL NADU - REGISTRATION DEPARTMENT
-TITLE DEED OF SALE / CONVEYANCE DEED
-Document No: 5109/2024
-District: Chennai | Taluk: Tambaram | Village: Selaiyur Village
-Survey Number: 142/3B
-Total Area Extent: 2400 Sq.ft (222.96 Sq.meters)
-Purchaser: M. Vijay Anand, S/o R. Mohan
-Aadhaar Number: 8721-3312-9014
-Boundaries:
-North by: Survey No 142/2
-South by: Survey No 142/4
-East by: Survey No 142/5
-West by: Survey No 142/3A
-Coordinates: 12.9252 N, 80.1476 E to 12.9258 N, 80.1482 E
-Executed and Registered at Sub-Registrar Office, Tambaram.
-                """
-            else:
-                raw_text = """
-GOVERNMENT OF TAMIL NADU - REGISTRATION DEPARTMENT
-TITLE DEED OF SALE / CONVEYANCE DEED
-Document No: 4821/2024
-District: Chennai | Taluk: Tambaram | Village: Selaiyur Village
-Survey Number: 142/3A
-Total Area Extent: 2400 Sq.ft (222.96 Sq.meters)
-Purchaser: K. S. Ramanathan, S/o Late K. Sundaram
-Aadhaar Number: 5412-8823-8912
-Boundaries:
-North by: Survey No 142/2 (Road 30ft)
-South by: Survey No 142/4 (Vacant Plot)
-East by: Survey No 142/3B (Adjacent Plot)
-West by: Survey No 142/1 (Residential Property)
-Coordinates: 12.9249 N, 80.1472 E to 12.9255 N, 80.1478 E
-Executed and Registered at Sub-Registrar Office, Tambaram.
-                """
 
+        # 1. Read file bytes
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+
+        # 2. Extract text: if text file decode, if PDF/image run OCR engine
+        if file_path.endswith(".txt"):
+            try:
+                raw_text = file_bytes.decode("utf-8", errors="ignore")
+            except Exception:
+                raw_text = ""
+        else:
+            try:
+                ocr_out = self.engine.process_document_bytes(file_bytes)
+                raw_text = ocr_out.full_text
+            except Exception as e:
+                # Fallback to direct decode if available
+                try:
+                    raw_text = file_bytes.decode("utf-8", errors="ignore")
+                except Exception:
+                    raw_text = ""
+
+        # 3. Extract structured fields deterministically
         structured_record = DocumentExtractor.extract_structured_fields(raw_text)
-        confidence_score = 0.96 if len(structured_record["survey_number"]) > 0 and structured_record["area_sqft"] > 0 else 0.75
+        
+        has_survey = bool(structured_record.get("survey_number"))
+        has_area = bool(structured_record.get("area_sqft", 0) > 0)
+        
+        if len(raw_text.strip()) > 50 and has_survey and has_area:
+            confidence_score = 0.96
+        elif len(raw_text.strip()) > 30 and (has_survey or has_area):
+            confidence_score = 0.75
+        else:
+            confidence_score = 0.40
 
         return {
             "raw_text": raw_text.strip(),
@@ -137,6 +107,7 @@ Executed and Registered at Sub-Registrar Office, Tambaram.
             "extracted_fields": structured_record,
             "extraction_method": "OpenCV Filtered OCR + Rule-Based Regex Extraction",
         }
+
 
     def _process_db_document(self, db: Session, document_id: int) -> Dict[str, Any]:
         """

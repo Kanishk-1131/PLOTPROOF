@@ -248,13 +248,25 @@ export default function DashboardPage() {
                       {item.confidence_score}%
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <Link
-                        href={`/verification/${item.verification_id}`}
-                        className="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition"
-                      >
-                        <span>Audit</span>
-                        <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                      </Link>
+                      <div className="flex items-center justify-center space-x-2">
+                        {(item.status === 'SPATIAL_COLLISION' || item.status === 'REVIEW_REQUIRED' || item.status === 'MANUAL_REVIEW') ? (
+                          <Link
+                            href={`/verification/${item.verification_id}`}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold transition active:scale-95"
+                            title="Perform Sub-Registrar Authority Review on this deed"
+                          >
+                            <span>⚡ Authority Verify</span>
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/verification/${item.verification_id}`}
+                            className="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition"
+                          >
+                            <span>Audit</span>
+                            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                          </Link>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

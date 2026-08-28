@@ -192,6 +192,8 @@ class FieldExtractionEngine:
             extracted["coordinates"] = {
                 "latitude": coords["latitude"],
                 "longitude": coords["longitude"],
+                "bounds": coords.get("bounds"),
+                "polygon": coords.get("polygon"),
                 "source_text": f"{coords['latitude']}, {coords['longitude']}",
                 "confidence": 0.92,
                 "page": 1,
@@ -201,10 +203,13 @@ class FieldExtractionEngine:
             extracted["coordinates"] = {
                 "latitude": 12.9252,
                 "longitude": 80.1475,
+                "bounds": None,
+                "polygon": None,
                 "source_text": "12.9252 N, 80.1475 E (Cadastral Centroid)",
                 "confidence": 0.65,
                 "page": 1,
             }
+
 
         return extracted
 

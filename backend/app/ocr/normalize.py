@@ -119,13 +119,45 @@ def normalize_boundary_text(value: str) -> str:
     return cleaned
 
 
-def normalize_coordinates(raw_text: str) -> Optional[Dict[str, float]]:
+def normalize_coordinates(raw_text: str) -> Optional[Dict[str, Any]]:
     """
     Extracts, cleans, and validates latitude and longitude coordinates (Section 19).
     Validates range -90 <= lat <= 90 and -180 <= lng <= 180 and regional plausibility.
+    Supports both 2-point centroids and 4-point bounding boxes (lat1, lng1 to lat2, lng2).
     """
-    # Look for pair of decimal numbers
+    # Look for list of decimal numbers
     coords = re.findall(r"[-+]?\d{1,3}\.\d{3,}", raw_text)
+    if len(coords) >= 4:
+        try:
+            c0, c1, c2, c3 = float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])
+            # Check lat/lng order
+            if abs(c0) > 60 and abs(c1) < 40:
+                c0, c1 = c1, c0
+            if abs(c2) > 60 and abs(c3) < 40:
+                c2, c3 = c3, c2
+
+            lat1, lng1 = min(c0, c2), min(c1, c3)
+            lat2, lng2 = max(c0, c2), max(c1, c3)
+
+            lat = round((lat1 + lat2) / 2.0, 6)
+            lng = round((lng1 + lng2) / 2.0, 6)
+
+            poly_coords = [
+                [lat1, lng1],
+                [lat1, lng2],
+                [lat2, lng2],
+                [lat2, lng1],
+            ]
+
+            return {
+                "latitude": lat,
+                "longitude": lng,
+                "bounds": [lat1, lng1, lat2, lng2],
+                "polygon": poly_coords,
+            }
+        except (ValueError, IndexError):
+            pass
+
     if len(coords) >= 2:
         try:
             lat = float(coords[0])
@@ -147,3 +179,4 @@ def normalize_coordinates(raw_text: str) -> Optional[Dict[str, float]]:
             pass
 
     return None
+

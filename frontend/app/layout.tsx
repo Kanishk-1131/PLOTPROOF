@@ -5,8 +5,19 @@ import { Navbar } from '@/components/Navbar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/AuthModal';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter',
+  display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+});
+
+const mono = JetBrains_Mono({ 
+  subsets: ['latin'], 
+  variable: '--font-mono',
+  display: 'swap',
+  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+});
 
 export const metadata: Metadata = {
   title: 'PlotProof — Digital Land Verification Platform',

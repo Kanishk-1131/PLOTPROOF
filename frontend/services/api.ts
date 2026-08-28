@@ -128,12 +128,51 @@ export interface UploadResponse {
   preview_url: string;
 }
 
+export interface DefaultDocumentInfo {
+  preset_id: string;
+  name: string;
+  description: string;
+  survey_number: string;
+  village: string;
+  taluk: string;
+  district: string;
+  area_sqft: number;
+  area_display: string;
+  titleholder: string;
+  gps_bounds: string;
+  registered_hash: string;
+  pdf_download_url: string;
+  txt_download_url: string;
+  raw_text: string;
+  expected_outcome: string;
+}
+
+export interface SamplePresetInfo {
+  id: string;
+  tag: string;
+  title: string;
+  survey_number: string;
+  area: string;
+  expected_outcome: string;
+  pdf_url: string;
+  txt_url: string;
+  badge_color: string;
+  status_code: string;
+  reason?: string;
+}
+
 
 export interface VerificationReport {
   verification_id: string;
   document_id: number;
-  overall_status: 'VERIFIED' | 'SPATIAL_COLLISION' | 'TAMPER_ALERT' | 'MANUAL_REVIEW';
+  overall_status: 'VERIFIED' | 'SPATIAL_COLLISION' | 'TAMPER_ALERT' | 'MANUAL_REVIEW' | 'REVIEW_REQUIRED' | 'REJECTED';
   confidence_score: number;
+  review_required?: boolean;
+  review_reason?: string;
+  review_decision?: 'APPROVED' | 'REJECTED' | null;
+  review_authority?: string;
+  statutory_grounds?: string;
+
   created_at: string;
   document: {
     file_name: string;
@@ -386,6 +425,15 @@ export const apiService = {
 
   // --- DOCUMENT VERIFICATION PIPELINE ---
 
+  async getDefaultDocument(): Promise<DefaultDocumentInfo> {
+    const res = await apiClient.get<DefaultDocumentInfo>('/api/documents/default');
+    return res.data;
+  },
+
+  async getSamplePresets(): Promise<SamplePresetInfo[]> {
+    const res = await apiClient.get<SamplePresetInfo[]>('/api/documents/samples');
+    return res.data;
+  },
 
   async uploadDocument(file?: File, presetType?: string): Promise<UploadResponse> {
     const formData = new FormData();
@@ -408,6 +456,35 @@ export const apiService = {
     const res = await apiClient.get<VerificationReport>(`/api/verification/${verificationId}`);
     return res.data;
   },
+
+  getDocxReportUrl(verificationId: string): string {
+    return `${API_BASE}/api/verification/${verificationId}/report/docx`;
+  },
+
+  getMarkdownReportUrl(verificationId: string): string {
+    return `${API_BASE}/api/verification/${verificationId}/report/markdown`;
+  },
+
+  getCertificatePdfUrl(verificationId: string): string {
+    return `${API_BASE}/api/verification/${verificationId}/certificate/pdf`;
+  },
+
+  getCertificateQrUrl(verificationId: string): string {
+    return `${API_BASE}/api/verification/${verificationId}/qr`;
+  },
+
+  getCertificateQrDownloadUrl(verificationId: string): string {
+    return `${API_BASE}/api/verification/${verificationId}/qr/download`;
+  },
+
+  async submitReview(verificationId: string, decision: 'APPROVE' | 'REJECT', notes?: string): Promise<VerificationReport> {
+    const res = await apiClient.post<VerificationReport>(`/api/verification/${verificationId}/review`, {
+      decision: decision === 'APPROVE' ? 'APPROVED' : 'REJECTED',
+      notes: notes || `Sub-Registrar ${decision.toLowerCase()} action.`,
+    });
+    return res.data;
+  },
+
 
   async getStatsSummary() {
     const res = await apiClient.get('/api/verification/stats/summary');
