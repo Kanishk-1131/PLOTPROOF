@@ -1,4 +1,61 @@
+<<<<<<< HEAD
 ﻿venv/
 __pycache__/
 *.pyc
 .env
+=======
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+
+# Secrets
+*.pem
+*.key
+*.secret
+
+# Database & Storage
+postgres_data/
+redis_data/
+minio_data/
+plotproof.db
+backend/plotproof.db
+backend/static/storage/
+backend/storage/
+storage/
+.coverage
+htmlcov/
+backend/static/qr/
+*.tsbuildinfo
+backend/static/uploads/PP-*
+frontend/public/PP-*
+
+
+>>>>>>> 4926723ead96defd8607f34a3221a3f44d547fb7
